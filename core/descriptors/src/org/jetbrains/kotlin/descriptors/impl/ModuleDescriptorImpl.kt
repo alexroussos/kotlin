@@ -17,13 +17,12 @@
 package org.jetbrains.kotlin.descriptors.impl
 
 import org.jetbrains.kotlin.builtins.KotlinBuiltIns
-import org.jetbrains.kotlin.descriptors.ModuleDescriptor
-import org.jetbrains.kotlin.descriptors.ModuleParameters
-import org.jetbrains.kotlin.descriptors.PackageFragmentProvider
-import org.jetbrains.kotlin.descriptors.PackageViewDescriptor
+import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.descriptors.annotations.Annotations
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
+import org.jetbrains.kotlin.resolve.scopes.JetScope
+import org.jetbrains.kotlin.resolve.scopes.LazyScopeAdapter
 import org.jetbrains.kotlin.storage.StorageManager
 import org.jetbrains.kotlin.utils.sure
 import java.util.LinkedHashSet
@@ -43,6 +42,11 @@ public class ModuleDescriptorImpl(
     private var dependencies: ModuleDependencies? = null
     private var packageFragmentProviderForModuleContent: PackageFragmentProvider? = null
 
+    private var _packageViewManager: PackageViewManager? = null
+
+    override val packageViewManager: PackageViewManager
+        get() = _packageViewManager!!
+    
     private val packageFragmentProviderForWholeModuleWithDependencies by Delegates.lazy {
         val moduleDependencies = dependencies.sure { "Dependencies of module $id were not set before querying module content" }
         val dependenciesDescriptors = moduleDependencies.descriptors
@@ -82,17 +86,19 @@ public class ModuleDescriptorImpl(
      */
     public fun initialize(providerForModuleContent: PackageFragmentProvider) {
         assert(!isInitialized) { "Attempt to initialize module $id twice" }
-        packageFragmentProviderForModuleContent = providerForModuleContent
+        this.packageFragmentProviderForModuleContent = providerForModuleContent
+        if (this._packageViewManager == null) {
+            this._packageViewManager = PackageViewManagerImpl(this, storageManager)
+        }
     }
 
-    override fun getPackage(fqName: FqName): PackageViewDescriptor? {
-        val fragments = packageFragmentProviderForWholeModuleWithDependencies.getPackageFragments(fqName)
-        return if (!fragments.isEmpty()) PackageViewDescriptorImpl(this, fqName, fragments) else null
+    public fun setPackageViewManager(packageViewManager: PackageViewManager) {
+        assert(!isInitialized) { "Custom package view manager should be set before module content is initialized" }
+        this._packageViewManager = packageViewManager
     }
 
-    override fun getSubPackagesOf(fqName: FqName, nameFilter: (Name) -> Boolean): Collection<FqName> {
-        return packageFragmentProviderForWholeModuleWithDependencies.getSubPackagesOf(fqName, nameFilter)
-    }
+    val packageFragmentProvider: PackageFragmentProvider
+        get() = packageFragmentProviderForWholeModuleWithDependencies
 
     private val friendModules = LinkedHashSet<ModuleDescriptor>()
 
@@ -105,6 +111,22 @@ public class ModuleDescriptorImpl(
 
     override val builtIns: KotlinBuiltIns
         get() = KotlinBuiltIns.getInstance()
+}
+
+class PackageViewManagerImpl(private val module: ModuleDescriptorImpl, private val storageManager: StorageManager) : PackageViewManager {
+    override fun getPackage(fqName: FqName): PackageViewDescriptor? {
+        val fragments = module.packageFragmentProvider.getPackageFragments(fqName)
+        return if (!fragments.isEmpty()) PackageViewDescriptorImpl(module, fqName, fragments) else null
+    }
+
+    override fun getSubPackagesOf(fqName: FqName, nameFilter: (Name) -> Boolean): Collection<FqName> {
+        return module.packageFragmentProvider.getSubPackagesOf(fqName, nameFilter)
+    }
+
+    override fun getParentView(packageView: PackageViewDescriptor): PackageViewDescriptor? {
+        val fqName = packageView.getFqName()
+        return if (fqName.isRoot()) null else return LazyPackageViewWrapper(fqName.parent(), module, storageManager)
+    }
 }
 
 public interface ModuleDependencies {
@@ -121,4 +143,32 @@ public class LazyModuleDependencies(
 
     override val descriptors: List<ModuleDescriptorImpl>
         get() = dependencies()
+}
+
+/*
+ this wrapper should only be created to save computation for package view
+ that is known to exist but we do not necessarily need to query its contents
+
+ ModuleDescriptor#getPackage should be used for most use cases
+  */
+public class LazyPackageViewWrapper(
+        fqName: FqName, module: ModuleDescriptor, storageManager: StorageManager
+)
+: AbstractPackageViewDescriptor(fqName, module) {
+    private val _delegate = storageManager.createNullableLazyValue {
+        module.packageViewManager.getPackage(getFqName())
+    }
+
+    private val delegate: PackageViewDescriptor?
+        get() = _delegate()
+
+    private val scope = LazyScopeAdapter(storageManager.createLazyValue { delegate?.getMemberScope() ?: JetScope.Empty })
+
+    override fun getMemberScope(): JetScope {
+        return scope
+    }
+
+    override fun getFragments(): MutableList<PackageFragmentDescriptor> {
+        return delegate?.getFragments() ?: listOf()
+    }
 }
