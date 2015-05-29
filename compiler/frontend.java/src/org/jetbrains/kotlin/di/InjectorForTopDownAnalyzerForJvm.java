@@ -266,7 +266,6 @@ public class InjectorForTopDownAnalyzerForJvm {
         scopeProvider.setAdditionalFileScopesProvider(additionalFileScopeProvider);
         scopeProvider.setDeclarationScopeProvider(declarationScopeProvider);
 
-        this.lazyTopDownAnalyzer.setBodyResolveTaskManager(dummyResolveManager);
         this.lazyTopDownAnalyzer.setBodyResolver(bodyResolver);
         this.lazyTopDownAnalyzer.setDeclarationResolver(declarationResolver);
         this.lazyTopDownAnalyzer.setDeclarationScopeProvider(declarationScopeProvider);
@@ -381,6 +380,7 @@ public class InjectorForTopDownAnalyzerForJvm {
         bodyResolver.setDelegatedPropertyResolver(delegatedPropertyResolver);
         bodyResolver.setExpressionTypingServices(expressionTypingServices);
         bodyResolver.setFunctionAnalyzerExtension(functionAnalyzerExtension);
+        bodyResolver.setResolveTaskManager(dummyResolveManager);
         bodyResolver.setScriptBodyResolverResolver(scriptBodyResolver);
         bodyResolver.setTrace(bindingTrace);
         bodyResolver.setValueParameterResolver(valueParameterResolver);

@@ -65,6 +65,7 @@ public class BodyResolver {
     private FunctionAnalyzerExtension functionAnalyzerExtension;
     private AdditionalCheckerProvider additionalCheckerProvider;
     private ValueParameterResolver valueParameterResolver;
+    private ResolveTaskManager resolveTaskManager;
 
     @Inject
     public void setScriptBodyResolverResolver(@NotNull ScriptBodyResolver scriptBodyResolverResolver) {
@@ -119,6 +120,11 @@ public class BodyResolver {
     @Inject
     public void setValueParameterResolver(ValueParameterResolver valueParameterResolver) {
         this.valueParameterResolver = valueParameterResolver;
+    }
+
+    @Inject
+    public void setResolveTaskManager(ResolveTaskManager resolveTaskManager) {
+        this.resolveTaskManager = resolveTaskManager;
     }
 
     private void resolveBehaviorDeclarationBodies(@NotNull BodiesResolveContext c) {
@@ -710,13 +716,10 @@ public class BodyResolver {
         for (Map.Entry<JetNamedFunction, SimpleFunctionDescriptor> entry : c.getFunctions().entrySet()) {
             JetNamedFunction declaration = entry.getKey();
 
-            ResolveTaskManager resolveTaskManager = c.getResolveTaskManager();
-
             JetScope scope = c.getDeclaringScope(declaration);
             assert scope != null : "Scope is null: " + PsiUtilPackage.getElementTextWithContext(declaration);
 
-            if (resolveTaskManager != null && !(resolveTaskManager instanceof DummyResolveManager) &&
-                    !c.getTopDownAnalysisMode().getIsLocalDeclarations()) {
+            if (!(resolveTaskManager instanceof DummyResolveManager) && !c.getTopDownAnalysisMode().getIsLocalDeclarations()) {
                 BodyResolveResult result = resolveTaskManager.resolveFunctionBody(declaration);
 
                 // Check resolve context
