@@ -509,7 +509,5 @@ public abstract class ElementResolver protected(
         override fun getOuterDataFlowInfo(): DataFlowInfo = DataFlowInfo.EMPTY
 
         override fun getTopDownAnalysisMode() = topDownAnalysisMode
-
-        override fun getResolveTaskManager() = null
     }
 }
