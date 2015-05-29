@@ -47,6 +47,7 @@ import org.jetbrains.kotlin.load.java.JavaFlexibleTypeCapabilitiesProvider;
 import org.jetbrains.kotlin.load.kotlin.KotlinJvmCheckerProvider;
 import org.jetbrains.kotlin.resolve.validation.SymbolUsageValidator;
 import org.jetbrains.kotlin.resolve.lazy.ScopeProvider.AdditionalFileScopeProvider;
+import org.jetbrains.kotlin.resolve.DummyResolveManager;
 import org.jetbrains.kotlin.resolve.AnnotationResolver;
 import org.jetbrains.kotlin.resolve.calls.CallResolver;
 import org.jetbrains.kotlin.resolve.calls.ArgumentTypeResolver;
@@ -127,6 +128,7 @@ public class InjectorForReplWithJava {
     private final KotlinJvmCheckerProvider kotlinJvmCheckerProvider;
     private final SymbolUsageValidator symbolUsageValidator;
     private final AdditionalFileScopeProvider additionalFileScopeProvider;
+    private final DummyResolveManager dummyResolveManager;
     private final AnnotationResolver annotationResolver;
     private final CallResolver callResolver;
     private final ArgumentTypeResolver argumentTypeResolver;
@@ -214,6 +216,7 @@ public class InjectorForReplWithJava {
         this.kotlinJvmCheckerProvider = KotlinJvmCheckerProvider.INSTANCE$;
         this.symbolUsageValidator = kotlinJvmCheckerProvider.getSymbolUsageValidator();
         this.additionalFileScopeProvider = additionalFileScopeProvider;
+        this.dummyResolveManager = new DummyResolveManager();
         this.annotationResolver = new AnnotationResolver();
         this.callResolver = new CallResolver();
         this.argumentTypeResolver = new ArgumentTypeResolver();
@@ -264,6 +267,7 @@ public class InjectorForReplWithJava {
         scopeProvider.setAdditionalFileScopesProvider(additionalFileScopeProvider);
         scopeProvider.setDeclarationScopeProvider(declarationScopeProvider);
 
+        this.lazyTopDownAnalyzer.setBodyResolveTaskManager(dummyResolveManager);
         this.lazyTopDownAnalyzer.setBodyResolver(bodyResolver);
         this.lazyTopDownAnalyzer.setDeclarationResolver(declarationResolver);
         this.lazyTopDownAnalyzer.setDeclarationScopeProvider(declarationScopeProvider);

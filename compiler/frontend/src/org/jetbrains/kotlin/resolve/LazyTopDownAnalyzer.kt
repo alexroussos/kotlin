@@ -32,6 +32,8 @@ import org.jetbrains.kotlin.resolve.lazy.*
 import org.jetbrains.kotlin.resolve.lazy.descriptors.LazyClassDescriptor
 import org.jetbrains.kotlin.resolve.resolveUtil.checkTraitRequirements
 import org.jetbrains.kotlin.resolve.varianceChecker.VarianceChecker
+import org.jetbrains.kotlin.storage.LockBasedLazyResolveStorageManager
+import org.jetbrains.kotlin.utils.Profiler
 import java.util.ArrayList
 import javax.inject.Inject
 
@@ -47,6 +49,7 @@ public class LazyTopDownAnalyzer {
     private var topLevelDescriptorProvider: TopLevelDescriptorProvider? = null
     private var fileScopeProvider: FileScopeProvider? = null
     private var declarationScopeProvider: DeclarationScopeProvider? = null
+    private var resolveTaskManager: ResolveTaskManager? = null
 
     Inject
     public fun setLazyDeclarationResolver(lazyDeclarationResolver: LazyDeclarationResolver) {
@@ -103,8 +106,13 @@ public class LazyTopDownAnalyzer {
         this.bodyResolver = bodyResolver
     }
 
+    Inject
+    public fun setBodyResolveTaskManager(resolveTaskManager: ResolveTaskManager) {
+        this.resolveTaskManager = resolveTaskManager
+    }
+
     public fun analyzeDeclarations(topDownAnalysisMode: TopDownAnalysisMode, declarations: Collection<PsiElement>, outerDataFlowInfo: DataFlowInfo): TopDownAnalysisContext {
-        val c = TopDownAnalysisContext(topDownAnalysisMode, outerDataFlowInfo, declarationScopeProvider!!)
+        val c = TopDownAnalysisContext(topDownAnalysisMode, outerDataFlowInfo, declarationScopeProvider!!, resolveTaskManager)
 
         val topLevelFqNames = HashMultimap.create<FqName, JetElement>()
 
@@ -148,11 +156,6 @@ public class LazyTopDownAnalyzer {
 
                 override fun visitPackageDirective(directive: JetPackageDirective) {
                     DescriptorResolver.resolvePackageHeader(directive, moduleDescriptor!!, trace!!)
-                }
-
-                override fun visitImportDirective(importDirective: JetImportDirective) {
-                    val fileScope = fileScopeProvider!!.getFileScope(importDirective.getContainingJetFile()) as LazyFileScope
-                    fileScope.forceResolveImport(importDirective)
                 }
 
                 private fun visitClassOrObject(classOrObject: JetClassOrObject) {

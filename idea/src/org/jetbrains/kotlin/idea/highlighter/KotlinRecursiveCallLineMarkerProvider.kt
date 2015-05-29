@@ -37,7 +37,6 @@ import org.jetbrains.kotlin.resolve.scopes.receivers.ExpressionReceiver
 import org.jetbrains.kotlin.resolve.scopes.receivers.ReceiverValue
 import org.jetbrains.kotlin.resolve.scopes.receivers.ThisReceiver
 import org.jetbrains.kotlin.types.expressions.OperatorConventions
-import org.jetbrains.kotlin.utils.Profiler
 import java.util.HashSet
 
 public class KotlinRecursiveCallLineMarkerProvider() : LineMarkerProvider {
@@ -45,8 +44,6 @@ public class KotlinRecursiveCallLineMarkerProvider() : LineMarkerProvider {
 
     override fun collectSlowLineMarkers(elements: MutableList<PsiElement>, result: MutableCollection<LineMarkerInfo<*>>) {
         val markedLineNumbers = HashSet<Int>()
-
-        val profiler = Profiler.create("Recursive calls").start().printThreadName()
 
         for (element in elements) {
             ProgressManager.checkCanceled()
@@ -58,8 +55,6 @@ public class KotlinRecursiveCallLineMarkerProvider() : LineMarkerProvider {
                 }
             }
         }
-
-        profiler.end()
     }
 
     private fun getEnclosingFunction(element: JetElement, stopOnNonInlinedLambdas: Boolean): JetNamedFunction? {

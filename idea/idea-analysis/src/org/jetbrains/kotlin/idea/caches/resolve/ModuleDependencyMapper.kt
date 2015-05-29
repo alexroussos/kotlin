@@ -21,15 +21,28 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.JdkOrderEntry
 import com.intellij.openapi.roots.LibraryOrderEntry
 import com.intellij.openapi.roots.ModuleRootManager
+import com.intellij.psi.util.CachedValueProvider
+import com.intellij.psi.util.CachedValuesManager
+import com.intellij.psi.util.PsiModificationTracker
 import org.jetbrains.kotlin.analyzer.*
+import org.jetbrains.kotlin.context.GlobalContext
 import org.jetbrains.kotlin.context.GlobalContextImpl
+import org.jetbrains.kotlin.context.withModule
 import org.jetbrains.kotlin.context.withProject
+import org.jetbrains.kotlin.descriptors.FunctionDescriptor
+import org.jetbrains.kotlin.di.InjectorForBodyResolve
 import org.jetbrains.kotlin.idea.project.ResolveSessionForBodies
+import org.jetbrains.kotlin.idea.project.TargetPlatform
 import org.jetbrains.kotlin.load.java.structure.JavaClass
 import org.jetbrains.kotlin.load.java.structure.impl.JavaClassImpl
 import org.jetbrains.kotlin.psi.JetFile
+import org.jetbrains.kotlin.psi.JetNamedFunction
+import org.jetbrains.kotlin.resolve.*
+import org.jetbrains.kotlin.resolve.calls.smartcasts.DataFlowInfo
 import org.jetbrains.kotlin.resolve.jvm.JvmPlatformParameters
+import org.jetbrains.kotlin.resolve.lazy.ResolveSession
 import org.jetbrains.kotlin.storage.ExceptionTracker
+import org.jetbrains.kotlin.storage.MemoizedFunctionToNotNull
 import org.jetbrains.kotlin.utils.keysToMap
 
 fun createModuleResolverProvider(
@@ -69,10 +82,9 @@ fun createModuleResolverProvider(
 
     val resolverForProject = createResolverForProject()
 
-    val moduleToBodiesResolveSession = modulesToCreateResolversFor.keysToMap {
-        module ->
-        val analyzer = resolverForProject.resolverForModule(module)
-        ResolveSessionForBodies(project, analyzer.lazyResolveSession)
+    val moduleToBodiesResolveSession = modulesToCreateResolversFor.keysToMap { module ->
+        val resolveSession = resolverForProject.resolverForModule(module).lazyResolveSession
+        ResolveSessionForBodies(project, resolveSession, IDEResolveTaskManagerImpl(globalContext, project, resolveSession))
     }
     return ModuleResolverProviderImpl(
             resolverForProject,
