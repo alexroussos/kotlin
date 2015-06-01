@@ -19,9 +19,12 @@ package org.jetbrains.kotlin.jps.build.kannotator;
 import com.intellij.openapi.util.io.FileUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.jps.builders.BuildResult;
+import org.jetbrains.jps.model.java.JavaSourceRootType;
+import org.jetbrains.jps.model.java.JpsJavaExtensionService;
 import org.jetbrains.jps.model.module.JpsModule;
 import org.jetbrains.jps.model.module.JpsModuleSourceRoot;
 import org.jetbrains.kotlin.jps.build.AbstractKotlinJpsBuildTestCase;
+import org.jetbrains.kotlin.jps.build.classFilesComparison.ClassFilesComparisonPackage;
 
 import java.io.File;
 
@@ -36,40 +39,45 @@ public class KAnnotatorJpsBuildTestCase extends AbstractKotlinJpsBuildTestCase {
     }
 
     public void testMakeKannotator() {
-        doTest(false);
+        doTest();
     }
 
-    public void testRebuildKannotator() {
-        doTest(true);
-    }
-
-    private void doTest(boolean rebuildBeforeMake) {
+    private void doTest() {
         initProject();
         rebuildAll();
         for (JpsModule module : myProject.getModules()) {
             for (JpsModuleSourceRoot sourceRoot : module.getSourceRoots()) {
-                processFile(sourceRoot.getFile(), rebuildBeforeMake);
+                processFile(sourceRoot.getFile());
+
+                checkOutDirectoriesAfterMake(module, sourceRoot);
             }
         }
     }
 
-    private void processFile(File root, boolean rebuildBeforeMake) {
+    private void checkOutDirectoriesAfterMake(JpsModule module, JpsModuleSourceRoot sourceRoot) {
+        File outDir = JpsJavaExtensionService.getInstance().getOutputDirectory(
+                module, sourceRoot.getRootType() == JavaSourceRootType.TEST_SOURCE);
+        File outDirAfterMake = new File(outDir.getPath() + "-after-make");
+        rebuildAll();
+        ClassFilesComparisonPackage.assertEqualDirectories(outDir, outDirAfterMake, false);
+        FileUtil.delete(outDirAfterMake);
+    }
+
+    private void processFile(File root) {
         if (root.isDirectory()) {
             File[] files = root.listFiles();
             if (files == null) return;
             for (File file : files) {
-                processFile(file, rebuildBeforeMake);
+                processFile(file);
             }
         }
         else if (root.getName().endsWith(".kt")) {
             System.out.println("Test started. File: " + root.getName());
             String path = root.getAbsolutePath();
-            if (rebuildBeforeMake) {
-                rebuildAll();
-            }
             System.out.println("Change file: " + path);
             change(path);
             makeAll().assertSuccessful();
+            System.out.println("Make successful,");
             System.out.println("Test successfully finished. File: " + root.getName());
             System.out.println("-----");
         }
