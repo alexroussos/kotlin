@@ -597,6 +597,7 @@
                             <file file="${jps.extracted.dir}/trove4j.jar"/>
                             <file file="${jps.extracted.dir}/ui-designer-jps-plugin.jar"/>
                             <file file="${jps.extracted.dir}/util.jar"/>
+                            <!-- <file file="${jps.extracted.dir}/snappy-in-java-0.3.1.jar"/> -->
                         </resources>
                     </copy>
 
@@ -661,6 +662,9 @@
             <!-- TODO temporary workaround since util-rt is not packaged into intellij-core.jar -->
             <copy file="ideaSDK/lib/util.jar" todir="${core}"/>
             <copy file="ideaSDK/lib/snappy-in-java-0.3.1.jar" todir="${core}"/>
+
+            <!-- Temp copy into jps dependencies -->
+            <copy file="ideaSDK/lib/snappy-in-java-0.3.1.jar" todir="${jps}"/>
 
             <!--
                  This one needs to be deleted because otherwise it gets onto the classpath
