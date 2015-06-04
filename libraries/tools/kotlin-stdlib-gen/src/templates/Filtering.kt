@@ -12,6 +12,7 @@ fun filtering(): List<GenericFunction> {
         body {
             """
             require(n >= 0, { "Requested element count $n is less than zero." })
+            if (n == 0) return toList()
             val list: ArrayList<T>
             if (this is Collection<*>) {
                 val resultSize = size() - n
@@ -42,7 +43,7 @@ fun filtering(): List<GenericFunction> {
         body(Sequences) {
             """
             require(n >= 0, { "Requested element count $n is less than zero." })
-            return DropSequence(this, n)
+            return if (n == 0) this else DropSequence(this, n)
             """
         }
 
@@ -53,6 +54,8 @@ fun filtering(): List<GenericFunction> {
         body(ArraysOfObjects, ArraysOfPrimitives) {
             """
             require(n >= 0, { "Requested element count $n is less than zero." })
+            if (n == 0)
+                return toList()
             if (n >= size())
                 return emptyList()
 
@@ -72,8 +75,10 @@ fun filtering(): List<GenericFunction> {
         body {
             """
             require(n >= 0, { "Requested element count $n is less than zero." })
+            if (n == 0) return emptyList()
+            if (this is Collection<T> && n >= size()) return toList()
             var count = 0
-            val list = ArrayList<T>(Math.min(n, collectionSizeOrDefault(n)))
+            val list = ArrayList<T>(n)
             for (item in this) {
                 if (count++ == n)
                     break
@@ -86,7 +91,7 @@ fun filtering(): List<GenericFunction> {
         doc(Strings) { "Returns a string containing the first [n] characters from this string, or the entire string if this string is shorter."}
         body(Strings) {
             """
-            require(n >= 0, { "Requested element count $n is less than zero." })
+            require(n >= 0, { "Requested character count $n is less than zero." })
             return substring(0, Math.min(n, length()))
             """
         }
@@ -97,22 +102,46 @@ fun filtering(): List<GenericFunction> {
         body(Sequences) {
             """
             require(n >= 0, { "Requested element count $n is less than zero." })
-            return TakeSequence(this, n)
+            return if (n == 0) emptySequence() else TakeSequence(this, n)
             """
         }
 
         body(ArraysOfObjects, ArraysOfPrimitives) {
             """
             require(n >= 0, "Requested element count $n is less than zero.")
+            if (n == 0) return emptyList()
+            if (n >= size()) return toList()
             var count = 0
-            val realN = Math.min(n, size())
-            val list = ArrayList<T>(realN)
+            val list = ArrayList<T>(n)
             for (item in this) {
-                if (count++ == realN)
+                if (count++ == n)
                     break;
                 list.add(item)
             }
             return list
+            """
+        }
+    }
+
+    templates add f("dropLast(n: Int)") {
+        val n = "\$n"
+        only(Lists, ArraysOfObjects, ArraysOfPrimitives, Strings)
+
+        doc { "Returns a list containing all elements except last [n] elements." }
+        returns("List<T>")
+        body {
+            """
+            require(n >= 0, { "Requested element count $n is less than zero." })
+            return take((size() - n).coerceAtLeast(0))
+            """
+        }
+
+        doc(Strings) { "Returns a string with the last [n] characters removed." }
+        returns("String", Strings)
+        body(Strings) {
+            """
+            require(n >= 0, { "Requested character count $n is less than zero." })
+            return take((length() - n).coerceAtLeast(0))
             """
         }
     }
@@ -126,7 +155,7 @@ fun filtering(): List<GenericFunction> {
         doc(Strings) { "Returns a string containing the last [n] characters from this string, or the entire string if this string is shorter."}
         body(Strings) {
             """
-            require(n >= 0, { "Requested element count $n is less than zero." })
+            require(n >= 0, { "Requested character count $n is less than zero." })
             val length = length()
             return substring(length - Math.min(n, length), length)
             """
@@ -136,10 +165,11 @@ fun filtering(): List<GenericFunction> {
         body(Lists, ArraysOfObjects, ArraysOfPrimitives) {
             """
             require(n >= 0, { "Requested element count $n is less than zero." })
+            if (n == 0) return emptyList()
             val size = size()
-            val realN = Math.min(n, size)
-            val list = ArrayList<T>(realN)
-            for (index in size - realN .. size - 1)
+            if (n >= size) return toList()
+            val list = ArrayList<T>(n)
+            for (index in size - n .. size - 1)
                 list.add(this[index])
             return list
             """
@@ -170,11 +200,7 @@ fun filtering(): List<GenericFunction> {
         returns(Strings) { "String" }
         body(Strings) {
             """
-            for (index in 0..length - 1)
-                if (!predicate(get(index))) {
-                    return substring(index)
-                }
-            return ""
+            return trimStart(predicate)
             """
         }
 
@@ -224,6 +250,63 @@ fun filtering(): List<GenericFunction> {
         body(Sequences) {
             """
             return TakeWhileSequence(this, predicate)
+            """
+        }
+    }
+
+    templates add f("dropLastWhile(predicate: (T) -> Boolean)") {
+        inline(true)
+        only(Lists, ArraysOfObjects, ArraysOfPrimitives, Strings)
+        doc { "Returns a list containing all elements except last elements that satisfy the given [predicate]." }
+        returns("List<T>")
+
+        body {
+            """
+            for (index in lastIndex downTo 0) {
+                if (!predicate(this[index])) {
+                    return take(index + 1)
+                }
+            }
+            return emptyList()
+            """
+        }
+
+        doc(Strings) { "Returns a string containing all characters except last characters that satisfy the given [predicate]." }
+        returns("String", Strings)
+        body(Strings) {
+            """
+            return trimEnd(predicate)
+            """
+        }
+    }
+
+    templates add f("takeLastWhile(predicate: (T) -> Boolean)") {
+        inline(true)
+        only(Lists, ArraysOfObjects, ArraysOfPrimitives, Strings)
+        doc { "Returns a list containing last elements satisfying the given [predicate]."}
+        returns("List<T>")
+
+        body {
+            """
+            for (index in lastIndex downTo 0) {
+                if (!predicate(this[index])) {
+                    return drop(index + 1)
+                }
+            }
+            return toList()
+            """
+        }
+
+        doc(Strings) { "Returns a string containing last characters that satisfy the given [predicate]." }
+        returns("String", Strings)
+        body(Strings) {
+            """
+            for (index in lastIndex downTo 0) {
+                if (!predicate(this[index])) {
+                    return substring(index + 1)
+                }
+            }
+            return this
             """
         }
     }
