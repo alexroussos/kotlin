@@ -223,6 +223,12 @@ public class BlackBoxCodegenTestGenerated extends AbstractBlackBoxCodegenTest {
             doTest(fileName);
         }
 
+        @TestMetadata("kt7288.kt")
+        public void testKt7288() throws Exception {
+            String fileName = JetTestUtils.navigationMetadata("compiler/testData/codegen/box/arrays/kt7288.kt");
+            doTest(fileName);
+        }
+
         @TestMetadata("kt779.kt")
         public void testKt779() throws Exception {
             String fileName = JetTestUtils.navigationMetadata("compiler/testData/codegen/box/arrays/kt779.kt");
@@ -2176,6 +2182,27 @@ public class BlackBoxCodegenTestGenerated extends AbstractBlackBoxCodegenTest {
         @TestMetadata("tryCatchFinallyChain.kt")
         public void testTryCatchFinallyChain() throws Exception {
             String fileName = JetTestUtils.navigationMetadata("compiler/testData/codegen/box/controlStructures/tryCatchFinallyChain.kt");
+            doTest(fileName);
+        }
+    }
+
+    @TestMetadata("compiler/testData/codegen/box/deadCodeElimination")
+    @TestDataPath("$PROJECT_ROOT")
+    @RunWith(JUnit3RunnerWithInners.class)
+    public static class DeadCodeElimination extends AbstractBlackBoxCodegenTest {
+        public void testAllFilesPresentInDeadCodeElimination() throws Exception {
+            JetTestUtils.assertAllTestsPresentByMetadata(this.getClass(), new File("compiler/testData/codegen/box/deadCodeElimination"), Pattern.compile("^(.+)\\.kt$"), true);
+        }
+
+        @TestMetadata("intersectingVariableRange.kt")
+        public void testIntersectingVariableRange() throws Exception {
+            String fileName = JetTestUtils.navigationMetadata("compiler/testData/codegen/box/deadCodeElimination/intersectingVariableRange.kt");
+            doTest(fileName);
+        }
+
+        @TestMetadata("intersectingVariableRangeInFinally.kt")
+        public void testIntersectingVariableRangeInFinally() throws Exception {
+            String fileName = JetTestUtils.navigationMetadata("compiler/testData/codegen/box/deadCodeElimination/intersectingVariableRangeInFinally.kt");
             doTest(fileName);
         }
     }
@@ -4324,6 +4351,12 @@ public class BlackBoxCodegenTestGenerated extends AbstractBlackBoxCodegenTest {
         @TestMetadata("incWithLabel.kt")
         public void testIncWithLabel() throws Exception {
             String fileName = JetTestUtils.navigationMetadata("compiler/testData/codegen/box/intrinsics/incWithLabel.kt");
+            doTest(fileName);
+        }
+
+        @TestMetadata("infixCall.kt")
+        public void testInfixCall() throws Exception {
+            String fileName = JetTestUtils.navigationMetadata("compiler/testData/codegen/box/intrinsics/infixCall.kt");
             doTest(fileName);
         }
 
