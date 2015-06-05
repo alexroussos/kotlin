@@ -16,8 +16,6 @@
 
 package org.jetbrains.kotlin.idea.debugger.evaluate
 
-import com.intellij.debugger.DebuggerInvocationUtil
-import com.intellij.debugger.DebuggerManagerEx
 import com.intellij.debugger.SourcePosition
 import com.intellij.debugger.engine.ContextUtil
 import com.intellij.debugger.engine.SourcePositionProvider
@@ -35,12 +33,8 @@ import com.intellij.debugger.ui.tree.LocalVariableDescriptor
 import com.intellij.debugger.ui.tree.StackFrameDescriptor
 import com.intellij.debugger.ui.tree.StaticDescriptor
 import com.intellij.execution.process.ProcessOutputTypes
-import com.intellij.openapi.application.ModalityState
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.util.io.FileUtil
-import com.intellij.psi.PsiDocumentManager
-import com.intellij.psi.PsiManager
-import com.intellij.psi.search.FilenameIndex
 import com.intellij.xdebugger.impl.ui.XDebuggerUIConstants
 import com.sun.jdi.ObjectReference
 import org.apache.log4j.AppenderSkeleton
@@ -62,13 +56,7 @@ import java.util.Collections
 public abstract class AbstractKotlinEvaluateExpressionTest : KotlinDebuggerTestBase() {
     private val logger = Logger.getLogger(javaClass<KotlinEvaluateExpressionCache>())!!
 
-    private val appender = object : AppenderSkeleton() {
-        override fun append(event: LoggingEvent?) {
-            println(event?.getRenderedMessage(), ProcessOutputTypes.SYSTEM)
-        }
-        override fun close() {}
-        override fun requiresLayout() = false
-    }
+    private var appender: AppenderSkeleton? = null
 
     private var oldLogLevel: Level? = null
     private var oldShowFqTypeNames = false
@@ -82,12 +70,24 @@ public abstract class AbstractKotlinEvaluateExpressionTest : KotlinDebuggerTestB
 
         oldLogLevel = logger.getLevel()
         logger.setLevel(Level.DEBUG)
+
+        appender = object : AppenderSkeleton() {
+            override fun append(event: LoggingEvent?) {
+                println(event?.getRenderedMessage(), ProcessOutputTypes.SYSTEM)
+            }
+            override fun close() {}
+            override fun requiresLayout() = false
+        }
+
         logger.addAppender(appender)
     }
 
     override fun tearDown() {
         logger.setLevel(oldLogLevel)
         logger.removeAppender(appender)
+
+        appender = null
+        oldLogLevel = null
 
         NodeRendererSettings.getInstance()!!.getClassRenderer()!!.SHOW_FQ_TYPE_NAMES = oldShowFqTypeNames
 
@@ -198,7 +198,7 @@ public abstract class AbstractKotlinEvaluateExpressionTest : KotlinDebuggerTestB
     }
 
     fun getExtraVars(): Set<TextWithImports> {
-        return KotlinFrameExtraVariablesProvider().collectVariables(debuggerContext.getSourcePosition(), evaluationContext, hashSetOf())!!
+        return KotlinFrameExtraVariablesProvider().collectVariables(debuggerContext!!.getSourcePosition(), evaluationContext, hashSetOf())!!
     }
 
     private inner class Printer() {
