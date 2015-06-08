@@ -274,6 +274,12 @@ public class BlackBoxInlineCodegenTestGenerated extends AbstractBlackBoxInlineCo
             doTestMultiFileWithInlineCheck(fileName);
         }
 
+        @TestMetadata("defaultParamRemapping.1.kt")
+        public void testDefaultParamRemapping() throws Exception {
+            String fileName = JetTestUtils.navigationMetadata("compiler/testData/codegen/boxInline/defaultValues/defaultParamRemapping.1.kt");
+            doTestMultiFileWithInlineCheck(fileName);
+        }
+
         @TestMetadata("inlineInDefaultParameter.1.kt")
         public void testInlineInDefaultParameter() throws Exception {
             String fileName = JetTestUtils.navigationMetadata("compiler/testData/codegen/boxInline/defaultValues/inlineInDefaultParameter.1.kt");
@@ -820,6 +826,12 @@ public class BlackBoxInlineCodegenTestGenerated extends AbstractBlackBoxInlineCo
         @TestMetadata("extension.1.kt")
         public void testExtension() throws Exception {
             String fileName = JetTestUtils.navigationMetadata("compiler/testData/codegen/boxInline/simple/extension.1.kt");
+            doTestMultiFileWithInlineCheck(fileName);
+        }
+
+        @TestMetadata("extensionLambda.1.kt")
+        public void testExtensionLambda() throws Exception {
+            String fileName = JetTestUtils.navigationMetadata("compiler/testData/codegen/boxInline/simple/extensionLambda.1.kt");
             doTestMultiFileWithInlineCheck(fileName);
         }
 
