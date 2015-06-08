@@ -24,7 +24,6 @@ import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.psi.JetImportDirective
 import org.jetbrains.kotlin.psi.JetPsiUtil
 import org.jetbrains.kotlin.resolve.BindingTrace
-import org.jetbrains.kotlin.resolve.JetModuleUtil
 import org.jetbrains.kotlin.resolve.PlatformTypesMappedToKotlinChecker
 import org.jetbrains.kotlin.resolve.QualifiedExpressionResolver.LookupMode
 import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
@@ -66,15 +65,14 @@ class AliasImportsIndexed(allImports: Collection<JetImportDirective>) : IndexedI
 
 class LazyImportResolver(
         val resolveSession: ResolveSession,
-        val packageView: PackageViewDescriptor,
+        val moduleDescriptor: ModuleDescriptor,
         val indexedImports: IndexedImports,
         private val traceForImportResolve: BindingTrace,
-        includeRootPackageClasses: Boolean
+        private val includeRootPackageClasses: Boolean
 ) {
     private val importedScopesProvider = resolveSession.getStorageManager().createMemoizedFunction {
         directive: JetImportDirective -> ImportDirectiveResolveCache(directive)
     }
-    private val rootScope = JetModuleUtil.getImportsResolutionScope(resolveSession.getModuleDescriptor(), includeRootPackageClasses)
 
     private var directiveUnderResolve: JetImportDirective? = null
 
@@ -101,11 +99,11 @@ class LazyImportResolver(
                     try {
                         val resolver = resolveSession.getQualifiedExpressionResolver()
                         val directiveImportScope = resolver.processImportReference(
-                                directive, rootScope, packageView.getMemberScope(), traceForImportResolve, mode)
+                                directive, moduleDescriptor, traceForImportResolve, mode, includeRootPackageClasses)
                         val descriptors = if (directive.isAllUnder()) emptyList() else directiveImportScope.getAllDescriptors()
 
                         if (mode == LookupMode.EVERYTHING) {
-                            PlatformTypesMappedToKotlinChecker.checkPlatformTypesMappedToKotlin(packageView.getModule(), traceForImportResolve, directive, descriptors)
+                            PlatformTypesMappedToKotlinChecker.checkPlatformTypesMappedToKotlin(moduleDescriptor, traceForImportResolve, directive, descriptors)
                         }
 
                         importResolveStatus = ImportResolveStatus(mode, directiveImportScope, descriptors)
@@ -211,14 +209,10 @@ class LazyImportResolver(
     public fun getImportScope(directive: JetImportDirective, lookupMode: LookupMode): JetScope {
         return importedScopesProvider(directive).scopeForMode(lookupMode)
     }
-
-    public fun printScopeStructure(p: Printer) {
-        p.print("rootScope = ")
-        rootScope.printScopeStructure(p.withholdIndentOnce())
-    }
 }
 
 class LazyImportScope(
+        private val containingDeclaration: DeclarationDescriptor,
         private val importResolver: LazyImportResolver,
         private val filteringKind: LazyImportScope.FilteringKind,
         private val debugName: String
@@ -235,7 +229,7 @@ class LazyImportScope(
         val visibility = descriptor.getVisibility()
         val includeVisible = filteringKind == FilteringKind.VISIBLE_CLASSES
         if (!visibility.mustCheckInImports()) return includeVisible
-        return Visibilities.isVisible(ReceiverValue.IRRELEVANT_RECEIVER, descriptor, importResolver.packageView) == includeVisible
+        return Visibilities.isVisible(ReceiverValue.IRRELEVANT_RECEIVER, descriptor, importResolver.moduleDescriptor) == includeVisible
     }
 
     override fun getClassifier(name: Name): ClassifierDescriptor? {
@@ -285,7 +279,7 @@ class LazyImportScope(
 
     override fun getOwnDeclaredDescriptors() = listOf<DeclarationDescriptor>()
 
-    override fun getContainingDeclaration() = importResolver.packageView
+    override fun getContainingDeclaration() = containingDeclaration
 
     override fun toString() = "LazyImportScope: " + debugName
 
@@ -293,9 +287,7 @@ class LazyImportScope(
         p.println(javaClass.getSimpleName(), ": ", debugName, " {")
         p.pushIndent()
 
-        p.println("packageDescriptor = ", importResolver.packageView)
-
-        importResolver.printScopeStructure(p)
+        p.println("containingDeclaration = ", containingDeclaration)
 
         p.popIndent()
         p.println("}")
