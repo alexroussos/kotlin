@@ -485,6 +485,12 @@ public class SmartCompletionHandlerTestGenerated extends AbstractSmartCompletion
         doTest(fileName);
     }
 
+    @TestMetadata("LastParamIsFunction.kt")
+    public void testLastParamIsFunction() throws Exception {
+        String fileName = JetTestUtils.navigationMetadata("idea/idea-completion/testData/handlers/smart/LastParamIsFunction.kt");
+        doTest(fileName);
+    }
+
     @TestMetadata("MergeTail1.kt")
     public void testMergeTail1() throws Exception {
         String fileName = JetTestUtils.navigationMetadata("idea/idea-completion/testData/handlers/smart/MergeTail1.kt");
@@ -758,6 +764,18 @@ public class SmartCompletionHandlerTestGenerated extends AbstractSmartCompletion
     @TestMetadata("Vararg6.kt")
     public void testVararg6() throws Exception {
         String fileName = JetTestUtils.navigationMetadata("idea/idea-completion/testData/handlers/smart/Vararg6.kt");
+        doTest(fileName);
+    }
+
+    @TestMetadata("VarargAfterStar.kt")
+    public void testVarargAfterStar() throws Exception {
+        String fileName = JetTestUtils.navigationMetadata("idea/idea-completion/testData/handlers/smart/VarargAfterStar.kt");
+        doTest(fileName);
+    }
+
+    @TestMetadata("VarargWithParameterAfter.kt")
+    public void testVarargWithParameterAfter() throws Exception {
+        String fileName = JetTestUtils.navigationMetadata("idea/idea-completion/testData/handlers/smart/VarargWithParameterAfter.kt");
         doTest(fileName);
     }
 

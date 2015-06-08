@@ -183,34 +183,46 @@ class ExpectedInfos(
 
             val expectedName = if (descriptor.hasSynthesizedParameterNames()) null else parameter.getName().asString()
 
+            fun needCommaForParameter(parameter: ValueParameterDescriptor): Boolean {
+                if (parameter.hasDefaultValue()) return false // parameter is optional
+                if (parameter.getVarargElementType() != null) return false // vararg arguments list can be empty
+                // last parameter of functional type can be placed outside parenthesis:
+                if (parameter == parameters.last() && KotlinBuiltIns.isFunctionOrExtensionFunctionType(parameter.getType())) return false
+                return true
+            }
+
+            val tail = if (argumentName == null) {
+                if (parameter == parameters.last())
+                    Tail.RPARENTH //TODO: support square brackets
+                else if (parameters.dropWhile { it != parameter }.drop(1).any(::needCommaForParameter))
+                    Tail.COMMA
+                else
+                    null
+            }
+            else {
+                namedArgumentTail(argumentToParameter, argumentName, descriptor)
+            }
+
+            val alreadyHasStar = argument.getSpreadElement() != null
+
             val varargElementType = parameter.getVarargElementType()
             if (varargElementType != null) {
                 if (isFunctionLiteralArgument) continue
 
-                if (argumentName == null) {
-                    expectedInfos.add(ArgumentExpectedInfo(varargElementType, expectedName?.unpluralize(), null, descriptor, argumentPosition))
+                val varargTail = if (argumentName == null && tail == Tail.RPARENTH)
+                    null /* even if it's the last parameter, there can be more arguments for the same parameter */
+                else
+                    tail
 
-                    if (argumentIndex == parameters.indexOf(parameter)) {
-                        val tail = if (parameter == parameters.last()) Tail.RPARENTH else null
-                        expectedInfos.add(ArgumentExpectedInfo(parameter.getType(), expectedName, tail, descriptor, argumentPosition, ItemOptions.STAR_PREFIX))
-                    }
+                if (!alreadyHasStar) {
+                    expectedInfos.add(ArgumentExpectedInfo(varargElementType, expectedName?.unpluralize(), varargTail, descriptor, argumentPosition))
                 }
-                else {
-                    val tail = namedArgumentTail(argumentToParameter, argumentName, descriptor)
-                    expectedInfos.add(ArgumentExpectedInfo(varargElementType, expectedName?.unpluralize(), tail, descriptor, argumentPosition))
-                    expectedInfos.add(ArgumentExpectedInfo(parameter.getType(), expectedName, tail, descriptor, argumentPosition, ItemOptions.STAR_PREFIX))
-                }
+
+                val starOptions = if (!alreadyHasStar) ItemOptions.STAR_PREFIX else ItemOptions.DEFAULT
+                expectedInfos.add(ArgumentExpectedInfo(parameter.getType(), expectedName, varargTail, descriptor, argumentPosition, starOptions))
             }
             else {
-                val lastNonOptionalParam = parameters.lastOrNull { !it.hasDefaultValue() }
-
-                fun needCommaForParameter(parameter: ValueParameterDescriptor): Boolean {
-                    if (parameter.hasDefaultValue()) return false // parameter is optional
-                    if (parameter.getVarargElementType() != null) return false // vararg arguments list can be empty
-                    // last non-optional parameter of functional type can be placed outside parenthesis:
-                    if (parameter == lastNonOptionalParam && KotlinBuiltIns.isFunctionOrExtensionFunctionType(parameter.getType())) return false
-                    return true
-                }
+                if (alreadyHasStar) continue
 
                 val parameterType = if (useHeuristicSignatures)
                     HeuristicSignatures.correctedParameterType(descriptor, parameter, moduleDescriptor, callElement.getProject()) ?: parameter.getType()
@@ -223,17 +235,6 @@ class ExpectedInfos(
                     }
                 }
                 else {
-                    val tail = if (argumentName == null) {
-                        if (parameter == parameters.last())
-                            Tail.RPARENTH //TODO: support square brackets
-                        else if (parameters.dropWhile { it != parameter }.drop(1).none(::needCommaForParameter))
-                            null
-                        else
-                            Tail.COMMA
-                    }
-                    else {
-                        namedArgumentTail(argumentToParameter, argumentName, descriptor)
-                    }
 
                     expectedInfos.add(ArgumentExpectedInfo(parameterType, expectedName, tail, descriptor, argumentPosition))
                 }

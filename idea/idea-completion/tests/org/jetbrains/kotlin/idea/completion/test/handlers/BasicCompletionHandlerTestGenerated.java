@@ -47,36 +47,6 @@ public class BasicCompletionHandlerTestGenerated extends AbstractBasicCompletion
         doTest(fileName);
     }
 
-    @TestMetadata("ExclChar1.kt")
-    public void testExclChar1() throws Exception {
-        String fileName = JetTestUtils.navigationMetadata("idea/idea-completion/testData/handlers/basic/ExclChar1.kt");
-        doTest(fileName);
-    }
-
-    @TestMetadata("ExclChar2.kt")
-    public void testExclChar2() throws Exception {
-        String fileName = JetTestUtils.navigationMetadata("idea/idea-completion/testData/handlers/basic/ExclChar2.kt");
-        doTest(fileName);
-    }
-
-    @TestMetadata("ExclChar3.kt")
-    public void testExclChar3() throws Exception {
-        String fileName = JetTestUtils.navigationMetadata("idea/idea-completion/testData/handlers/basic/ExclChar3.kt");
-        doTest(fileName);
-    }
-
-    @TestMetadata("ExclChar4.kt")
-    public void testExclChar4() throws Exception {
-        String fileName = JetTestUtils.navigationMetadata("idea/idea-completion/testData/handlers/basic/ExclChar4.kt");
-        doTest(fileName);
-    }
-
-    @TestMetadata("ExclChar5.kt")
-    public void testExclChar5() throws Exception {
-        String fileName = JetTestUtils.navigationMetadata("idea/idea-completion/testData/handlers/basic/ExclChar5.kt");
-        doTest(fileName);
-    }
-
     @TestMetadata("ExtensionReceiverTypeArg.kt")
     public void testExtensionReceiverTypeArg() throws Exception {
         String fileName = JetTestUtils.navigationMetadata("idea/idea-completion/testData/handlers/basic/ExtensionReceiverTypeArg.kt");
@@ -119,12 +89,6 @@ public class BasicCompletionHandlerTestGenerated extends AbstractBasicCompletion
         doTest(fileName);
     }
 
-    @TestMetadata("ReplaceByLambdaTemplateNoClosingParenth.kt")
-    public void testReplaceByLambdaTemplateNoClosingParenth() throws Exception {
-        String fileName = JetTestUtils.navigationMetadata("idea/idea-completion/testData/handlers/basic/ReplaceByLambdaTemplateNoClosingParenth.kt");
-        doTest(fileName);
-    }
-
     @TestMetadata("ReplaceFunctionCallByProperty.kt")
     public void testReplaceFunctionCallByProperty() throws Exception {
         String fileName = JetTestUtils.navigationMetadata("idea/idea-completion/testData/handlers/basic/ReplaceFunctionCallByProperty.kt");
@@ -153,6 +117,126 @@ public class BasicCompletionHandlerTestGenerated extends AbstractBasicCompletion
     public void testSuperTypeArg() throws Exception {
         String fileName = JetTestUtils.navigationMetadata("idea/idea-completion/testData/handlers/basic/SuperTypeArg.kt");
         doTest(fileName);
+    }
+
+    @TestMetadata("idea/idea-completion/testData/handlers/basic/exclChar")
+    @TestDataPath("$PROJECT_ROOT")
+    @RunWith(JUnit3RunnerWithInners.class)
+    public static class ExclChar extends AbstractBasicCompletionHandlerTest {
+        @TestMetadata("1.kt")
+        public void test1() throws Exception {
+            String fileName = JetTestUtils.navigationMetadata("idea/idea-completion/testData/handlers/basic/exclChar/1.kt");
+            doTest(fileName);
+        }
+
+        @TestMetadata("2.kt")
+        public void test2() throws Exception {
+            String fileName = JetTestUtils.navigationMetadata("idea/idea-completion/testData/handlers/basic/exclChar/2.kt");
+            doTest(fileName);
+        }
+
+        @TestMetadata("3.kt")
+        public void test3() throws Exception {
+            String fileName = JetTestUtils.navigationMetadata("idea/idea-completion/testData/handlers/basic/exclChar/3.kt");
+            doTest(fileName);
+        }
+
+        @TestMetadata("4.kt")
+        public void test4() throws Exception {
+            String fileName = JetTestUtils.navigationMetadata("idea/idea-completion/testData/handlers/basic/exclChar/4.kt");
+            doTest(fileName);
+        }
+
+        @TestMetadata("5.kt")
+        public void test5() throws Exception {
+            String fileName = JetTestUtils.navigationMetadata("idea/idea-completion/testData/handlers/basic/exclChar/5.kt");
+            doTest(fileName);
+        }
+
+        public void testAllFilesPresentInExclChar() throws Exception {
+            JetTestUtils.assertAllTestsPresentByMetadata(this.getClass(), new File("idea/idea-completion/testData/handlers/basic/exclChar"), Pattern.compile("^(.+)\\.kt$"), true);
+        }
+    }
+
+    @TestMetadata("idea/idea-completion/testData/handlers/basic/highOrderFunctions")
+    @TestDataPath("$PROJECT_ROOT")
+    @RunWith(JUnit3RunnerWithInners.class)
+    public static class HighOrderFunctions extends AbstractBasicCompletionHandlerTest {
+        public void testAllFilesPresentInHighOrderFunctions() throws Exception {
+            JetTestUtils.assertAllTestsPresentByMetadata(this.getClass(), new File("idea/idea-completion/testData/handlers/basic/highOrderFunctions"), Pattern.compile("^(.+)\\.kt$"), true);
+        }
+
+        @TestMetadata("ForceParenthesisForTabChar.kt")
+        public void testForceParenthesisForTabChar() throws Exception {
+            String fileName = JetTestUtils.navigationMetadata("idea/idea-completion/testData/handlers/basic/highOrderFunctions/ForceParenthesisForTabChar.kt");
+            doTest(fileName);
+        }
+
+        @TestMetadata("FunctionLiteralInsertOnSpace.kt")
+        public void testFunctionLiteralInsertOnSpace() throws Exception {
+            String fileName = JetTestUtils.navigationMetadata("idea/idea-completion/testData/handlers/basic/highOrderFunctions/FunctionLiteralInsertOnSpace.kt");
+            doTest(fileName);
+        }
+
+        @TestMetadata("FunctionLiteralInsertWhenNoSpacesForBraces.kt")
+        public void testFunctionLiteralInsertWhenNoSpacesForBraces() throws Exception {
+            String fileName = JetTestUtils.navigationMetadata("idea/idea-completion/testData/handlers/basic/highOrderFunctions/FunctionLiteralInsertWhenNoSpacesForBraces.kt");
+            doTest(fileName);
+        }
+
+        @TestMetadata("HigherOrderFunction.kt")
+        public void testHigherOrderFunction() throws Exception {
+            String fileName = JetTestUtils.navigationMetadata("idea/idea-completion/testData/handlers/basic/highOrderFunctions/HigherOrderFunction.kt");
+            doTest(fileName);
+        }
+
+        @TestMetadata("HigherOrderFunctionWithArg.kt")
+        public void testHigherOrderFunctionWithArg() throws Exception {
+            String fileName = JetTestUtils.navigationMetadata("idea/idea-completion/testData/handlers/basic/highOrderFunctions/HigherOrderFunctionWithArg.kt");
+            doTest(fileName);
+        }
+
+        @TestMetadata("HigherOrderFunctionWithArgs1.kt")
+        public void testHigherOrderFunctionWithArgs1() throws Exception {
+            String fileName = JetTestUtils.navigationMetadata("idea/idea-completion/testData/handlers/basic/highOrderFunctions/HigherOrderFunctionWithArgs1.kt");
+            doTest(fileName);
+        }
+
+        @TestMetadata("HigherOrderFunctionWithArgs2.kt")
+        public void testHigherOrderFunctionWithArgs2() throws Exception {
+            String fileName = JetTestUtils.navigationMetadata("idea/idea-completion/testData/handlers/basic/highOrderFunctions/HigherOrderFunctionWithArgs2.kt");
+            doTest(fileName);
+        }
+
+        @TestMetadata("HigherOrderFunctionWithArgs3.kt")
+        public void testHigherOrderFunctionWithArgs3() throws Exception {
+            String fileName = JetTestUtils.navigationMetadata("idea/idea-completion/testData/handlers/basic/highOrderFunctions/HigherOrderFunctionWithArgs3.kt");
+            doTest(fileName);
+        }
+
+        @TestMetadata("InsertFunctionWithSingleParameterWithBrace.kt")
+        public void testInsertFunctionWithSingleParameterWithBrace() throws Exception {
+            String fileName = JetTestUtils.navigationMetadata("idea/idea-completion/testData/handlers/basic/highOrderFunctions/InsertFunctionWithSingleParameterWithBrace.kt");
+            doTest(fileName);
+        }
+
+        @TestMetadata("ReplaceByLambdaTemplateNoClosingParenth.kt")
+        public void testReplaceByLambdaTemplateNoClosingParenth() throws Exception {
+            String fileName = JetTestUtils.navigationMetadata("idea/idea-completion/testData/handlers/basic/highOrderFunctions/ReplaceByLambdaTemplateNoClosingParenth.kt");
+            doTest(fileName);
+        }
+
+        @TestMetadata("WithArgsEmptyLambdaAfter.kt")
+        public void testWithArgsEmptyLambdaAfter() throws Exception {
+            String fileName = JetTestUtils.navigationMetadata("idea/idea-completion/testData/handlers/basic/highOrderFunctions/WithArgsEmptyLambdaAfter.kt");
+            doTest(fileName);
+        }
+
+        @TestMetadata("WithArgsNonEmptyLambdaAfter.kt")
+        public void testWithArgsNonEmptyLambdaAfter() throws Exception {
+            String fileName = JetTestUtils.navigationMetadata("idea/idea-completion/testData/handlers/basic/highOrderFunctions/WithArgsNonEmptyLambdaAfter.kt");
+            doTest(fileName);
+        }
     }
 
     @TestMetadata("idea/idea-completion/testData/handlers/basic/stringTemplate")
