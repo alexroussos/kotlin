@@ -121,20 +121,19 @@ class KotlinFieldBreakpoint(
     override fun createRequestForPreparedClass(debugProcess: DebugProcessImpl?, refType: ReferenceType?) {
         if (debugProcess == null || refType == null) return
 
-        val property = getProperty(getSourcePosition())
-        if (property == null) return
+        val property = getProperty(getSourcePosition()) ?: return
 
-        val bindingContext = property.analyzeAndGetResult().bindingContext
+        val bindingContext = runReadAction { property.analyzeAndGetResult().bindingContext }
         var descriptor = bindingContext.get(BindingContext.DECLARATION_TO_DESCRIPTOR, property)
         if (descriptor is ValueParameterDescriptor) {
             descriptor = bindingContext.get(BindingContext.VALUE_PARAMETER_AS_PROPERTY, descriptor)
         }
 
-        breakpointType = if (!bindingContext.get(BindingContext.BACKING_FIELD_REQUIRED, descriptor as PropertyDescriptor)) {
-            BreakpointType.METHOD
+        breakpointType = if (bindingContext.get(BindingContext.BACKING_FIELD_REQUIRED, descriptor as PropertyDescriptor)) {
+            BreakpointType.FIELD
         }
         else {
-            BreakpointType.FIELD
+            BreakpointType.METHOD
         }
 
         val vm = debugProcess.getVirtualMachineProxy()
