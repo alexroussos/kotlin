@@ -24,18 +24,41 @@ import org.jetbrains.kotlin.name.FqNameBase
 import org.jetbrains.kotlin.name.Name
 
 public fun qualifiedNameForSourceCode(descriptor: ClassifierDescriptor): String {
-    val nameString = DescriptorRenderer.COMPACT.renderName(descriptor.getName())
+    val nameString = descriptor.getName().render()
     val qualifier = qualifierName(descriptor.getContainingDeclaration())
     return if (qualifier != null && qualifier != "") qualifier + "." + nameString else nameString
 }
 
 private fun qualifierName(descriptor: DeclarationDescriptor): String? = when (descriptor) {
     is ClassDescriptor -> qualifiedNameForSourceCode(descriptor)
-    is PackageFragmentDescriptor -> DescriptorRenderer.COMPACT.renderFqName(descriptor.fqName)
+    is PackageFragmentDescriptor -> descriptor.fqName.render()
     else -> null
 }
 
 
-public fun Name.render(): String = DescriptorRenderer.COMPACT.renderName(this)
+public fun Name.render(): String {
+    return if (this.shouldBeEscaped()) '`' + asString() + '`' else asString()
+}
 
-public fun FqNameBase.render(): String = DescriptorRenderer.COMPACT.renderFqName(this)
+private fun Name.shouldBeEscaped(): Boolean {
+    if (isSpecial()) return false
+
+    val string = asString()
+    return string in KeywordStringsGenerated.KEYWORDS || string.any { !Character.isLetterOrDigit(it) && it != '_' }
+}
+
+public fun FqNameBase.render(): String {
+    return renderFqName(pathSegments())
+}
+
+public fun renderFqName(pathSegments: List<Name>): String {
+    return StringBuilder {
+        for (element in pathSegments) {
+            if (length() > 0) {
+                append(".")
+            }
+            append(element.render())
+        }
+    }.toString()
+}
+

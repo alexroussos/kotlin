@@ -45,8 +45,8 @@ import org.jetbrains.kotlin.psi.JetNamedFunction
 import org.jetbrains.kotlin.psi.JetProperty
 import org.jetbrains.kotlin.psi.JetSimpleNameExpression
 import org.jetbrains.kotlin.renderer.DescriptorRenderer
-import org.jetbrains.kotlin.renderer.DescriptorRendererBuilder
 import org.jetbrains.kotlin.renderer.NameShortness
+import org.jetbrains.kotlin.renderer.ParameterNameRenderingPolicy
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.calls.callUtil.getResolvedCall
 import org.jetbrains.kotlin.resolve.calls.model.ResolvedCall
@@ -149,17 +149,16 @@ public class DeprecatedSymbolUsageInWholeProjectFix(
 
     companion object : JetSingleIntentionActionFactory() {
         //TODO: better rendering needed
-        private val RENDERER = DescriptorRendererBuilder()
-                .setModifiers()
-                .setNameShortness(NameShortness.SHORT)
-//                .setWithoutTypeParameters(true)
-                .setParameterNameRenderingPolicy(DescriptorRenderer.ParameterNameRenderingPolicy.NONE)
-                .setReceiverAfterName(true)
-                .setRenderCompanionObjectName(true)
-                .setWithoutSuperTypes(true)
-                .setStartFromName(true)
-                .setWithDefinedIn(false)
-                .build()
+        private val RENDERER = DescriptorRenderer.withOptions {
+            modifiers = emptySet()
+            nameShortness = NameShortness.SHORT
+            parameterNameRenderingPolicy = ParameterNameRenderingPolicy.NONE
+            receiverAfterName = true
+            renderCompanionObjectName = true
+            withoutSuperTypes = true
+            startFromName = true
+            withDefinedIn = false
+        }
 
         override fun createAction(diagnostic: Diagnostic): IntentionAction? {
             val nameExpression = diagnostic.getPsiElement() as? JetSimpleNameExpression ?: return null

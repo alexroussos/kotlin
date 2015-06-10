@@ -38,11 +38,12 @@ import org.jetbrains.kotlin.psi.JetReferenceExpression
 import org.jetbrains.kotlin.psi.psiUtil.getElementTextWithContext
 import org.jetbrains.kotlin.psi.psiUtil.getNonStrictParentOfType
 import org.jetbrains.kotlin.renderer.DescriptorRenderer
-import org.jetbrains.kotlin.renderer.DescriptorRendererBuilder
 import org.jetbrains.kotlin.renderer.NameShortness
+import org.jetbrains.kotlin.renderer.RenderingFormat
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.lazy.BodyResolveMode
 import org.jetbrains.kotlin.resolve.source.PsiSourceElement
+import org.jetbrains.kotlin.utils.addToStdlib.constant
 
 public class KotlinQuickDocumentationProvider : AbstractDocumentationProvider() {
 
@@ -83,13 +84,12 @@ public class KotlinQuickDocumentationProvider : AbstractDocumentationProvider() 
     companion object {
         private val LOG = Logger.getInstance(javaClass<KotlinQuickDocumentationProvider>())
 
-        val quickDocNameFormat = DescriptorRendererBuilder()
-                .setWithDefinedIn(true)
-                .setNameShortness(NameShortness.SHORT)
-                .setRenderCompanionObjectName(true)
-                .setTextFormat(DescriptorRenderer.TextFormat.HTML)
-                .build()
+        private val DESCRIPTOR_RENDERER = DescriptorRenderer.HTML.withOptions {
+            nameShortness = NameShortness.SHORT
+            renderCompanionObjectName = true
+        }
 
+        private val MIX_KOTLIN_TO_JAVA_RENDERER = DESCRIPTOR_RENDERER.withOptions { withDefinedIn = false }
 
         private fun getText(element: PsiElement, originalElement: PsiElement?, quickNavigation: Boolean): String? {
             if (element is JetDeclaration) {
@@ -126,7 +126,7 @@ public class KotlinQuickDocumentationProvider : AbstractDocumentationProvider() 
                 return "No documentation available"
             }
 
-            var renderedDecl = quickDocNameFormat.render(declarationDescriptor)
+            var renderedDecl = DESCRIPTOR_RENDERER.render(declarationDescriptor)
             if (!quickNavigation) {
                 renderedDecl = "<pre>" + renderedDecl + "</pre>"
             }
@@ -141,7 +141,7 @@ public class KotlinQuickDocumentationProvider : AbstractDocumentationProvider() 
         private fun mixKotlinToJava(declarationDescriptor: DeclarationDescriptor, element: PsiElement, originalElement: PsiElement?): String? {
             val originalInfo = JavaDocumentationProvider().getQuickNavigateInfo(element, originalElement)
             if (originalInfo != null) {
-                val renderedDecl = DescriptorRenderer.HTML_NAMES_WITH_SHORT_TYPES.render(declarationDescriptor)
+                val renderedDecl = constant { DESCRIPTOR_RENDERER.withOptions { withDefinedIn = false } }.render(declarationDescriptor)
                 return renderedDecl + "<br/>Java declaration:<br/>" + originalInfo
             }
 
