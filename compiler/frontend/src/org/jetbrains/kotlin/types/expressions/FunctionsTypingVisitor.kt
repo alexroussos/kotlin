@@ -29,6 +29,7 @@ import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.getAnnotationEntries
 import org.jetbrains.kotlin.resolve.*
 import org.jetbrains.kotlin.resolve.BindingContext.EXPECTED_RETURN_TYPE
+import org.jetbrains.kotlin.resolve.lazy.ForceResolveUtil
 import org.jetbrains.kotlin.resolve.scopes.WritableScope
 import org.jetbrains.kotlin.resolve.source.toSourceElement
 import org.jetbrains.kotlin.types.CommonSupertypes
@@ -90,7 +91,8 @@ public class FunctionsTypingVisitor(facade: ExpressionTypingInternals) : Express
                     context.trace, context.dataFlowInfo, context.expectedType
             )
         }
-        AnnotationResolver.resolveAnnotationsArguments(functionDescriptor.getAnnotations());
+        // Necessary for local functions
+        ForceResolveUtil.forceResolveAllContents(functionDescriptor.getAnnotations());
 
         val functionInnerScope = FunctionDescriptorUtil.getFunctionInnerScope(context.scope, functionDescriptor, context.trace)
         components.expressionTypingServices.checkFunctionReturnType(
@@ -140,7 +142,7 @@ public class FunctionsTypingVisitor(facade: ExpressionTypingInternals) : Express
         val expectedType = context.expectedType
         val functionTypeExpected = !noExpectedType(expectedType) && KotlinBuiltIns.isFunctionOrExtensionFunctionType(expectedType)
 
-        val functionDescriptor = createFunctionDescriptor(expression, context)
+        val functionDescriptor = createFunctionLiteralDescriptor(expression, context)
         val safeReturnType = computeReturnType(expression, context, functionDescriptor, functionTypeExpected)
         functionDescriptor.setReturnType(safeReturnType)
 
@@ -153,7 +155,7 @@ public class FunctionsTypingVisitor(facade: ExpressionTypingInternals) : Express
         return createCheckedTypeInfo(resultType, context, expression)
     }
 
-    private fun createFunctionDescriptor(
+    private fun createFunctionLiteralDescriptor(
             expression: JetFunctionLiteralExpression,
             context: ExpressionTypingContext
     ): AnonymousFunctionDescriptor {
@@ -167,7 +169,7 @@ public class FunctionsTypingVisitor(facade: ExpressionTypingInternals) : Express
                 initializeFunctionDescriptorAndExplicitReturnType(context.scope.getContainingDeclaration(), context.scope, functionLiteral,
                                                                   functionDescriptor, context.trace, context.expectedType)
         for (parameterDescriptor in functionDescriptor.getValueParameters()) {
-            AnnotationResolver.resolveAnnotationsArguments(parameterDescriptor.getAnnotations())
+            ForceResolveUtil.forceResolveAllContents(parameterDescriptor.getAnnotations())
         }
         BindingContextUtils.recordFunctionDeclarationToDescriptor(context.trace, functionLiteral, functionDescriptor)
         return functionDescriptor

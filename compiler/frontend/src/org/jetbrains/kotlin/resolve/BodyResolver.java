@@ -33,6 +33,7 @@ import org.jetbrains.kotlin.resolve.calls.results.OverloadResolutionResults;
 import org.jetbrains.kotlin.resolve.calls.smartcasts.DataFlowInfo;
 import org.jetbrains.kotlin.resolve.calls.util.CallMaker;
 import org.jetbrains.kotlin.resolve.constants.CompileTimeConstant;
+import org.jetbrains.kotlin.resolve.lazy.ForceResolveUtil;
 import org.jetbrains.kotlin.resolve.scopes.*;
 import org.jetbrains.kotlin.resolve.scopes.receivers.ReceiverValue;
 import org.jetbrains.kotlin.types.*;
@@ -159,7 +160,7 @@ public class BodyResolver {
             @NotNull final ConstructorDescriptor descriptor,
             @NotNull JetScope declaringScope
     ) {
-        AnnotationResolver.resolveAnnotationsArguments(descriptor.getAnnotations());
+        ForceResolveUtil.forceResolveAllContents(descriptor.getAnnotations());
 
         final CallChecker callChecker = new ConstructorHeaderCallChecker(descriptor, additionalCheckerProvider.getCallChecker());
         resolveFunctionBody(c, trace, constructor, descriptor, declaringScope,
@@ -505,7 +506,7 @@ public class BodyResolver {
             ClassDescriptorWithResolutionScopes classDescriptor = entry.getValue();
             ConstructorDescriptor unsubstitutedPrimaryConstructor = classDescriptor.getUnsubstitutedPrimaryConstructor();
             if (unsubstitutedPrimaryConstructor != null) {
-                AnnotationResolver.resolveAnnotationsArguments(unsubstitutedPrimaryConstructor.getAnnotations());
+                ForceResolveUtil.forceResolveAllContents(unsubstitutedPrimaryConstructor.getAnnotations());
 
                 WritableScope parameterScope = getPrimaryConstructorParametersScope(classDescriptor.getScopeForClassHeaderResolution(),
                                                                                     unsubstitutedPrimaryConstructor);
@@ -532,6 +533,32 @@ public class BodyResolver {
         return parameterScope;
     }
 
+    private void resolveProperty(
+            @NotNull BodiesResolveContext c,
+            @Nullable JetScope parentScope,
+            @NotNull JetProperty property,
+            @NotNull PropertyDescriptor propertyDescriptor
+    ) {
+        computeDeferredType(propertyDescriptor.getReturnType());
+
+        JetExpression initializer = property.getInitializer();
+        JetScope propertyScope = getScopeForProperty(c, property);
+        if (parentScope == null) {
+            parentScope = propertyScope;
+        }
+        if (initializer != null) {
+            resolvePropertyInitializer(c, property, propertyDescriptor, initializer, propertyScope);
+        }
+
+        JetExpression delegateExpression = property.getDelegateExpression();
+        if (delegateExpression != null) {
+            assert initializer == null : "Initializer should be null for delegated property : " + property.getText();
+            resolvePropertyDelegate(c, property, propertyDescriptor, delegateExpression, parentScope, propertyScope);
+        }
+
+        resolvePropertyAccessors(c, property, propertyDescriptor);
+    }
+
     private void resolvePropertyDeclarationBodies(@NotNull BodiesResolveContext c) {
 
         // Member properties
@@ -545,23 +572,7 @@ public class BodyResolver {
                 PropertyDescriptor propertyDescriptor = c.getProperties().get(property);
                 assert propertyDescriptor != null;
 
-                computeDeferredType(propertyDescriptor.getReturnType());
-
-                JetExpression initializer = property.getInitializer();
-                JetScope propertyScope = getScopeForProperty(c, property);
-                if (initializer != null) {
-                    resolvePropertyInitializer(c, property, propertyDescriptor, initializer, propertyScope);
-                }
-
-                JetExpression delegateExpression = property.getDelegateExpression();
-                if (delegateExpression != null) {
-                    assert initializer == null : "Initializer should be null for delegated property : " + property.getText();
-                    resolvePropertyDelegate(c, property, propertyDescriptor, delegateExpression, classDescriptor.getScopeForMemberDeclarationResolution(), propertyScope);
-                }
-
-                AnnotationResolver.resolveAnnotationsArguments(propertyDescriptor.getAnnotations());
-
-                resolvePropertyAccessors(c, property, propertyDescriptor);
+                resolveProperty(c, classDescriptor.getScopeForMemberDeclarationResolution(), property, propertyDescriptor);
                 processed.add(property);
             }
         }
@@ -573,23 +584,7 @@ public class BodyResolver {
 
             PropertyDescriptor propertyDescriptor = entry.getValue();
 
-            computeDeferredType(propertyDescriptor.getReturnType());
-
-            JetExpression initializer = property.getInitializer();
-            JetScope propertyScope = getScopeForProperty(c, property);
-            if (initializer != null) {
-                resolvePropertyInitializer(c, property, propertyDescriptor, initializer, propertyScope);
-            }
-
-            JetExpression delegateExpression = property.getDelegateExpression();
-            if (delegateExpression != null) {
-                assert initializer == null : "Initializer should be null for delegated property : " + property.getText();
-                resolvePropertyDelegate(c, property, propertyDescriptor, delegateExpression, propertyScope, propertyScope);
-            }
-
-            AnnotationResolver.resolveAnnotationsArguments(propertyDescriptor.getAnnotations());
-
-            resolvePropertyAccessors(c, property, propertyDescriptor);
+            resolveProperty(c, null, property, propertyDescriptor);
         }
     }
 
@@ -610,7 +605,7 @@ public class BodyResolver {
         PropertyGetterDescriptor getterDescriptor = propertyDescriptor.getGetter();
         if (getter != null && getterDescriptor != null) {
             JetScope accessorScope = makeScopeForPropertyAccessor(c, getter, propertyDescriptor);
-            AnnotationResolver.resolveAnnotationsArguments(getterDescriptor.getAnnotations());
+            ForceResolveUtil.forceResolveAllContents(getterDescriptor.getAnnotations());
             resolveFunctionBody(c, fieldAccessTrackingTrace, getter, getterDescriptor, accessorScope);
         }
 
@@ -618,7 +613,7 @@ public class BodyResolver {
         PropertySetterDescriptor setterDescriptor = propertyDescriptor.getSetter();
         if (setter != null && setterDescriptor != null) {
             JetScope accessorScope = makeScopeForPropertyAccessor(c, setter, propertyDescriptor);
-            AnnotationResolver.resolveAnnotationsArguments(setterDescriptor.getAnnotations());
+            ForceResolveUtil.forceResolveAllContents(setterDescriptor.getAnnotations());
             resolveFunctionBody(c, fieldAccessTrackingTrace, setter, setterDescriptor, accessorScope);
         }
     }
@@ -697,7 +692,7 @@ public class BodyResolver {
     }
 
     @NotNull
-    private JetScope getScopeForProperty(@NotNull BodiesResolveContext c, @NotNull JetProperty property) {
+    private static JetScope getScopeForProperty(@NotNull BodiesResolveContext c, @NotNull JetProperty property) {
         JetScope scope = c.getDeclaringScopes().apply(property);
         assert scope != null : "Scope for property " + property.getText() + " should exists";
         return scope;

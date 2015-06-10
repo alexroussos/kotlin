@@ -22,6 +22,7 @@ import org.jetbrains.annotations.Nullable;
 import org.jetbrains.kotlin.descriptors.*;
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationDescriptor;
 import org.jetbrains.kotlin.descriptors.annotations.Annotations;
+import org.jetbrains.kotlin.resolve.AnnotationResolver;
 import org.jetbrains.kotlin.resolve.scopes.JetScope;
 import org.jetbrains.kotlin.types.JetType;
 import org.jetbrains.kotlin.types.TypeConstructor;
@@ -35,7 +36,7 @@ public class ForceResolveUtil {
 
     private ForceResolveUtil() {}
 
-    public static <T extends DeclarationDescriptor> T forceResolveAllContents(@NotNull T descriptor) {
+    public static <T> T forceResolveAllContents(@NotNull T descriptor) {
         doForceResolveAllContents(descriptor);
         return descriptor;
     }
@@ -85,6 +86,7 @@ public class ForceResolveUtil {
                 forceResolveAllContents(typeParameterDescriptor.getUpperBounds());
             }
             forceResolveAllContents(callableDescriptor.getReturnType());
+            forceResolveAllContents(callableDescriptor.getAnnotations());
         }
     }
 

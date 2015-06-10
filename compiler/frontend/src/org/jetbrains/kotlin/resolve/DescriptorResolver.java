@@ -41,6 +41,7 @@ import org.jetbrains.kotlin.resolve.constants.IntegerValueTypeConstant;
 import org.jetbrains.kotlin.resolve.constants.evaluate.ConstantExpressionEvaluator;
 import org.jetbrains.kotlin.resolve.constants.evaluate.EvaluatePackage;
 import org.jetbrains.kotlin.resolve.dataClassUtils.DataClassUtilsPackage;
+import org.jetbrains.kotlin.resolve.lazy.ForceResolveUtil;
 import org.jetbrains.kotlin.resolve.scopes.JetScope;
 import org.jetbrains.kotlin.resolve.scopes.JetScopeUtils;
 import org.jetbrains.kotlin.resolve.scopes.WritableScope;
@@ -612,6 +613,8 @@ public class DescriptorResolver {
                 toSourceElement(parameter)
         );
         trace.record(BindingContext.VALUE_PARAMETER, parameter, variableDescriptor);
+        // Type annotations also should be resolved
+        ForceResolveUtil.forceResolveAllContents(type.getAnnotations());
         return variableDescriptor;
     }
 
@@ -623,6 +626,8 @@ public class DescriptorResolver {
             BindingTrace trace
     ) {
         DeclarationDescriptor containingDeclaration = scope.getContainingDeclaration();
+        VariableDescriptor result;
+        JetType type;
         // SCRIPT: Create property descriptors
         if (JetPsiUtil.isScriptDeclaration(variable)) {
             PropertyDescriptorImpl propertyDescriptor = PropertyDescriptorImpl.create(
@@ -635,25 +640,26 @@ public class DescriptorResolver {
                     CallableMemberDescriptor.Kind.DECLARATION,
                     toSourceElement(variable)
             );
-
-            JetType type =
-                    getVariableType(propertyDescriptor, scope, variable, dataFlowInfo, false, trace); // For a local variable the type must not be deferred
+            // For a local variable the type must not be deferred
+            type = getVariableType(propertyDescriptor, scope, variable, dataFlowInfo, false, trace);
 
             ReceiverParameterDescriptor receiverParameter = ((ScriptDescriptor) containingDeclaration).getThisAsReceiverParameter();
             propertyDescriptor.setType(type, Collections.<TypeParameterDescriptor>emptyList(), receiverParameter, (JetType) null);
             initializeWithDefaultGetterSetter(propertyDescriptor);
             trace.record(BindingContext.VARIABLE, variable, propertyDescriptor);
-            return propertyDescriptor;
+            result = propertyDescriptor;
         }
         else {
             VariableDescriptorImpl variableDescriptor =
                     resolveLocalVariableDescriptorWithType(scope, variable, null, trace);
-
-            JetType type =
-                    getVariableType(variableDescriptor, scope, variable, dataFlowInfo, false, trace); // For a local variable the type must not be deferred
+            // For a local variable the type must not be deferred
+            type = getVariableType(variableDescriptor, scope, variable, dataFlowInfo, false, trace);
             variableDescriptor.setOutType(type);
-            return variableDescriptor;
+            result = variableDescriptor;
         }
+        // Type annotations also should be resolved
+        ForceResolveUtil.forceResolveAllContents(type.getAnnotations());
+        return result;
     }
 
     private static void initializeWithDefaultGetterSetter(PropertyDescriptorImpl propertyDescriptor) {
