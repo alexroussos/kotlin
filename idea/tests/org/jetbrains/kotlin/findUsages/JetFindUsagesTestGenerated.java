@@ -736,6 +736,33 @@ public class JetFindUsagesTestGenerated extends AbstractJetFindUsagesTest {
             }
         }
 
+        @TestMetadata("idea/testData/findUsages/kotlin/findPrimaryConstructorUsages")
+        @TestDataPath("$PROJECT_ROOT")
+        @RunWith(JUnit3RunnerWithInners.class)
+        public static class FindPrimaryConstructorUsages extends AbstractJetFindUsagesTest {
+            public void testAllFilesPresentInFindPrimaryConstructorUsages() throws Exception {
+                JetTestUtils.assertAllTestsPresentByMetadata(this.getClass(), new File("idea/testData/findUsages/kotlin/findPrimaryConstructorUsages"), Pattern.compile("^(.+)\\.0\\.kt$"), true);
+            }
+
+            @TestMetadata("primaryConstructorByRef.0.kt")
+            public void testPrimaryConstructorByRef() throws Exception {
+                String fileName = JetTestUtils.navigationMetadata("idea/testData/findUsages/kotlin/findPrimaryConstructorUsages/primaryConstructorByRef.0.kt");
+                doTest(fileName);
+            }
+
+            @TestMetadata("primaryConstructorNoKeyword.0.kt")
+            public void testPrimaryConstructorNoKeyword() throws Exception {
+                String fileName = JetTestUtils.navigationMetadata("idea/testData/findUsages/kotlin/findPrimaryConstructorUsages/primaryConstructorNoKeyword.0.kt");
+                doTest(fileName);
+            }
+
+            @TestMetadata("primaryConstructorWithKeyword.0.kt")
+            public void testPrimaryConstructorWithKeyword() throws Exception {
+                String fileName = JetTestUtils.navigationMetadata("idea/testData/findUsages/kotlin/findPrimaryConstructorUsages/primaryConstructorWithKeyword.0.kt");
+                doTest(fileName);
+            }
+        }
+
         @TestMetadata("idea/testData/findUsages/kotlin/findPropertyUsages")
         @TestDataPath("$PROJECT_ROOT")
         @RunWith(JUnit3RunnerWithInners.class)
@@ -973,45 +1000,6 @@ public class JetFindUsagesTestGenerated extends AbstractJetFindUsagesTest {
             }
         }
 
-        @TestMetadata("idea/testData/findUsages/kotlin/library")
-        @TestDataPath("$PROJECT_ROOT")
-        @RunWith(JUnit3RunnerWithInners.class)
-        public static class Library extends AbstractJetFindUsagesTest {
-            public void testAllFilesPresentInLibrary() throws Exception {
-                JetTestUtils.assertAllTestsPresentByMetadata(this.getClass(), new File("idea/testData/findUsages/kotlin/library"), Pattern.compile("^(.+)\\.0\\.kt$"), true);
-            }
-
-            @TestMetadata("LibraryClassUsages.0.kt")
-            public void testLibraryClassUsages() throws Exception {
-                String fileName = JetTestUtils.navigationMetadata("idea/testData/findUsages/kotlin/library/LibraryClassUsages.0.kt");
-                doTest(fileName);
-            }
-
-            @TestMetadata("LibraryFieldUsages.0.kt")
-            public void testLibraryFieldUsages() throws Exception {
-                String fileName = JetTestUtils.navigationMetadata("idea/testData/findUsages/kotlin/library/LibraryFieldUsages.0.kt");
-                doTest(fileName);
-            }
-
-            @TestMetadata("LibraryMethodUsages.0.kt")
-            public void testLibraryMethodUsages() throws Exception {
-                String fileName = JetTestUtils.navigationMetadata("idea/testData/findUsages/kotlin/library/LibraryMethodUsages.0.kt");
-                doTest(fileName);
-            }
-
-            @TestMetadata("LibraryStaticFieldUsages.0.kt")
-            public void testLibraryStaticFieldUsages() throws Exception {
-                String fileName = JetTestUtils.navigationMetadata("idea/testData/findUsages/kotlin/library/LibraryStaticFieldUsages.0.kt");
-                doTest(fileName);
-            }
-
-            @TestMetadata("LibraryStaticMethodUsages.0.kt")
-            public void testLibraryStaticMethodUsages() throws Exception {
-                String fileName = JetTestUtils.navigationMetadata("idea/testData/findUsages/kotlin/library/LibraryStaticMethodUsages.0.kt");
-                doTest(fileName);
-            }
-        }
-
         @TestMetadata("idea/testData/findUsages/kotlin/unresolvedAnnotation")
         @TestDataPath("$PROJECT_ROOT")
         @RunWith(JUnit3RunnerWithInners.class)
@@ -1053,6 +1041,18 @@ public class JetFindUsagesTestGenerated extends AbstractJetFindUsagesTest {
             @TestMetadata("javaDefaultConstructorInDelegationCall.0.java")
             public void testJavaDefaultConstructorInDelegationCall() throws Exception {
                 String fileName = JetTestUtils.navigationMetadata("idea/testData/findUsages/java/findConstructorUsages/javaDefaultConstructorInDelegationCall.0.java");
+                doTest(fileName);
+            }
+
+            @TestMetadata("primaryConstructorByJavaRef.0.java")
+            public void testPrimaryConstructorByJavaRef() throws Exception {
+                String fileName = JetTestUtils.navigationMetadata("idea/testData/findUsages/java/findConstructorUsages/primaryConstructorByJavaRef.0.java");
+                doTest(fileName);
+            }
+
+            @TestMetadata("primaryConstructorByJavaSuperRef.0.java")
+            public void testPrimaryConstructorByJavaSuperRef() throws Exception {
+                String fileName = JetTestUtils.navigationMetadata("idea/testData/findUsages/java/findConstructorUsages/primaryConstructorByJavaSuperRef.0.java");
                 doTest(fileName);
             }
 

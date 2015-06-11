@@ -29,6 +29,7 @@ import org.jetbrains.kotlin.asJava.KotlinLightElement
 import org.jetbrains.kotlin.resolve.DescriptorUtils
 import org.jetbrains.kotlin.codegen.PropertyCodegen
 import org.jetbrains.kotlin.asJava.KotlinLightMethod
+import org.jetbrains.kotlin.asJava.KotlinNoOriginLightMethod
 import org.jetbrains.kotlin.asJava.unwrapped
 import org.jetbrains.kotlin.resolve.OverrideResolver
 import org.jetbrains.kotlin.resolve.DescriptorToSourceUtils
@@ -86,7 +87,8 @@ fun PsiReference.isConstructorUsage(jetClassOrObject: JetClassOrObject): Boolean
         val descriptor = getConstructorCallDescriptor()
         if (descriptor !is ConstructorDescriptor) return false
 
-        return DescriptorToSourceUtils.descriptorToDeclaration(descriptor.getContainingDeclaration()) == jetClassOrObject
+        val declaration = DescriptorToSourceUtils.descriptorToDeclaration(descriptor.getContainingDeclaration())
+        return declaration == jetClassOrObject || (declaration is JetConstructor<*> && declaration.getContainingClassOrObject() == jetClassOrObject)
     }
 
     checkJavaUsage() || checkKotlinUsage()
@@ -118,7 +120,7 @@ public fun PsiElement.processDelegationCallConstructorUsages(scope: SearchScope,
 private fun PsiElement.processDelegationCallKotlinConstructorUsages(scope: SearchScope, process: (JetConstructorDelegationCall) -> Unit) {
     val element = unwrapped
     val klass = when (element) {
-        is JetSecondaryConstructor -> element.getClassOrObject()
+        is JetConstructor<*> -> element.getContainingClassOrObject()
         is JetClass -> element
         else -> return
     }
@@ -132,6 +134,8 @@ private fun PsiElement.processDelegationCallKotlinConstructorUsages(scope: Searc
 
 private fun PsiElement.processDelegationCallJavaConstructorUsages(scope: SearchScope, process: (JetConstructorDelegationCall) -> Unit) {
     if (this is KotlinLightElement<*, *>) return
+    // TODO: Temporary hack to avoid NPE while KotlinNoOriginLightMethod is around
+    if (this is KotlinNoOriginLightMethod) return
     if (!(this is PsiMethod && isConstructor())) return
     val klass = getContainingClass() ?: return
     val descriptor = getJavaMethodDescriptor() as? ConstructorDescriptor ?: return

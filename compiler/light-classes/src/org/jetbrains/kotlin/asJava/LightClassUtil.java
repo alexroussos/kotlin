@@ -154,6 +154,7 @@ public class LightClassUtil {
         PsiClass outerPsiClass = getWrappingClass(companionObject);
         if (outerPsiClass != null) {
             for (PsiField fieldOfParent : outerPsiClass.getFields()) {
+                if (!(fieldOfParent instanceof KotlinLightElement)) continue;
                 if (((KotlinLightElement<?, ?>) fieldOfParent).getOrigin() == companionObject &&
                     fieldOfParent.getName().equals(companionObject.getName())) { // TODO this check is relevant while light class has deprecated OBJECT$ field
                     return fieldOfParent;
@@ -245,6 +246,10 @@ public class LightClassUtil {
             assert propertyParent instanceof JetProperty : "JetProperty is expected to be parent of accessor";
 
             declaration = (JetProperty) propertyParent;
+        }
+
+        if (declaration instanceof JetConstructor) {
+            return getPsiClass(((JetConstructor) declaration).getContainingClassOrObject());
         }
 
         //noinspection unchecked
