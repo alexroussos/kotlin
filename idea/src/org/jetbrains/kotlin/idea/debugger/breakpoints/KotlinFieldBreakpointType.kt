@@ -16,16 +16,15 @@
 
 package org.jetbrains.kotlin.idea.debugger.breakpoints
 
-import com.intellij.CommonBundle
 import com.intellij.debugger.DebuggerBundle
-import com.intellij.debugger.SourcePosition
-import com.intellij.debugger.impl.PositionUtil
-import com.intellij.debugger.ui.breakpoints.*
-import com.intellij.openapi.application.ApplicationManager
+import com.intellij.debugger.ui.breakpoints.Breakpoint
+import com.intellij.debugger.ui.breakpoints.BreakpointManager
+import com.intellij.debugger.ui.breakpoints.BreakpointWithHighlighter
+import com.intellij.debugger.ui.breakpoints.JavaBreakpointType
+import com.intellij.icons.AllIcons
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.Messages
-import com.intellij.openapi.util.Ref
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.*
 import com.intellij.psi.search.GlobalSearchScope
@@ -33,13 +32,9 @@ import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.xdebugger.XDebuggerManager
 import com.intellij.xdebugger.XDebuggerUtil
 import com.intellij.xdebugger.breakpoints.XBreakpoint
-import com.intellij.xdebugger.breakpoints.XBreakpointProperties
 import com.intellij.xdebugger.breakpoints.XLineBreakpoint
 import com.intellij.xdebugger.breakpoints.XLineBreakpointType
 import com.intellij.xdebugger.breakpoints.ui.XBreakpointCustomPropertiesPanel
-import com.intellij.xdebugger.evaluation.XDebuggerEditorsProvider
-import org.jetbrains.annotations.TestOnly
-import org.jetbrains.java.debugger.breakpoints.properties.JavaFieldBreakpointProperties
 import org.jetbrains.kotlin.asJava.KotlinLightClass
 import org.jetbrains.kotlin.asJava.KotlinLightClassForExplicitDeclaration
 import org.jetbrains.kotlin.asJava.KotlinLightClassForPackage
@@ -48,20 +43,16 @@ import org.jetbrains.kotlin.descriptors.ValueParameterDescriptor
 import org.jetbrains.kotlin.idea.JetBundle
 import org.jetbrains.kotlin.idea.JetFileType
 import org.jetbrains.kotlin.idea.caches.resolve.analyzeAndGetResult
-import org.jetbrains.kotlin.idea.util.application.runReadAction
+import org.jetbrains.kotlin.idea.debugger.breakpoints.dialog.AddFieldBreakpointDialog
 import org.jetbrains.kotlin.idea.util.application.runWriteAction
-import org.jetbrains.kotlin.load.kotlin.PackageClassUtils
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.resolve.BindingContext
-import javax.swing.Icon
 import javax.swing.JComponent
 
-public class KotlinFieldBreakpointType : JavaBreakpointType<JavaFieldBreakpointProperties>, XLineBreakpointType<JavaFieldBreakpointProperties>(
+public class KotlinFieldBreakpointType : JavaBreakpointType<KotlinPropertyBreakpointProperties>, XLineBreakpointType<KotlinPropertyBreakpointProperties>(
         "kotlin-field", JetBundle.message("debugger.field.watchpoints.tab.title")
 ) {
-    private val delegate = JavaFieldBreakpointType()
-
-    override fun createJavaBreakpoint(project: Project, breakpoint: XBreakpoint<JavaFieldBreakpointProperties>): Breakpoint<*> {
+    override fun createJavaBreakpoint(project: Project, breakpoint: XBreakpoint<KotlinPropertyBreakpointProperties>): Breakpoint<*> {
         return KotlinFieldBreakpoint(project, breakpoint)
     }
 
@@ -97,7 +88,7 @@ public class KotlinFieldBreakpointType : JavaBreakpointType<JavaFieldBreakpointP
                 if (descriptor is ValueParameterDescriptor) {
                     descriptor = bindingContext.get(BindingContext.VALUE_PARAMETER_AS_PROPERTY, descriptor)
                 }
-                if (descriptor is PropertyDescriptor && bindingContext.get(BindingContext.BACKING_FIELD_REQUIRED, descriptor)) {
+                if (descriptor is PropertyDescriptor) {
                     canPutAt = true
                 }
                 return false
@@ -111,12 +102,12 @@ public class KotlinFieldBreakpointType : JavaBreakpointType<JavaFieldBreakpointP
 
     override fun getPriority() = 120
 
-    override fun createBreakpointProperties(file: VirtualFile, line: Int): JavaFieldBreakpointProperties? {
-        return delegate.createBreakpointProperties(file, line)
+    override fun createBreakpointProperties(file: VirtualFile, line: Int): KotlinPropertyBreakpointProperties? {
+        return KotlinPropertyBreakpointProperties()
     }
 
-    override fun addBreakpoint(project: Project, parentComponent: JComponent?): XLineBreakpoint<JavaFieldBreakpointProperties>? {
-        var result: XLineBreakpoint<JavaFieldBreakpointProperties>? = null
+    override fun addBreakpoint(project: Project, parentComponent: JComponent?): XLineBreakpoint<KotlinPropertyBreakpointProperties>? {
+        var result: XLineBreakpoint<KotlinPropertyBreakpointProperties>? = null
 
         val dialog = object : AddFieldBreakpointDialog(project) {
             override fun validateData(): Boolean {
@@ -140,7 +131,7 @@ public class KotlinFieldBreakpointType : JavaBreakpointType<JavaFieldBreakpointP
 
                 result = when (psiClass) {
                     is KotlinLightClassForPackage -> {
-                        psiClass.files.asSequence().map { createBreakpointIfPropertyExists(it, it, className, fieldName) }.firstOrNull()
+                        psiClass.files.asSequence().map { createBreakpointIfPropertyExists(it, it, className, fieldName) }.filterNotNull().firstOrNull()
                     }
                     is KotlinLightClassForExplicitDeclaration -> {
                         val jetClass = psiClass.getOrigin()
@@ -166,7 +157,7 @@ public class KotlinFieldBreakpointType : JavaBreakpointType<JavaFieldBreakpointP
             file: JetFile,
             className: String,
             fieldName: String
-    ): XLineBreakpoint<JavaFieldBreakpointProperties>? {
+    ): XLineBreakpoint<KotlinPropertyBreakpointProperties>? {
         val project = file.getProject()
         val property = declaration.getDeclarations().firstOrNull { it is JetProperty && it.getName() == fieldName } ?: return null
 
@@ -177,7 +168,7 @@ public class KotlinFieldBreakpointType : JavaBreakpointType<JavaFieldBreakpointP
                     this,
                     file.getVirtualFile().getUrl(),
                     line,
-                    JavaFieldBreakpointProperties(fieldName, className)
+                    KotlinPropertyBreakpointProperties(fieldName, className)
             )
         }
     }
@@ -186,118 +177,47 @@ public class KotlinFieldBreakpointType : JavaBreakpointType<JavaFieldBreakpointP
         Messages.showMessageDialog(project, message, DebuggerBundle.message("add.field.breakpoint.dialog.title"), Messages.getErrorIcon())
     }
 
-    override fun isAddBreakpointButtonVisible(): Boolean {
-        return delegate.isAddBreakpointButtonVisible()
+    override fun isAddBreakpointButtonVisible() = true
+
+    override fun getMutedEnabledIcon() = AllIcons.Debugger.Db_muted_field_breakpoint
+
+    override fun getDisabledIcon() = AllIcons.Debugger.Db_disabled_field_breakpoint
+
+    override fun getEnabledIcon() = AllIcons.Debugger.Db_field_breakpoint
+
+    override fun getMutedDisabledIcon() = AllIcons.Debugger.Db_muted_disabled_field_breakpoint
+
+    override fun canBeHitInOtherPlaces() = true
+
+    override fun getShortText(breakpoint: XLineBreakpoint<KotlinPropertyBreakpointProperties>): String? {
+        val properties = breakpoint.getProperties()
+        val className = properties.myClassName
+        return if (!className.isEmpty()) className + "." + properties.myFieldName else properties.myFieldName
     }
 
-    override fun getMutedEnabledIcon(): Icon {
-        return delegate.getMutedEnabledIcon()
+    override fun createProperties(): KotlinPropertyBreakpointProperties? {
+        return KotlinPropertyBreakpointProperties()
     }
 
-    override fun getDisabledIcon(): Icon {
-        return delegate.getDisabledIcon()
+    override fun createCustomPropertiesPanel(): XBreakpointCustomPropertiesPanel<XLineBreakpoint<KotlinPropertyBreakpointProperties>>? {
+        return KotlinFieldBreakpointPropertiesPanel()
     }
 
-    override fun getEnabledIcon(): Icon {
-        return delegate.getEnabledIcon()
-    }
-
-    override fun getMutedDisabledIcon(): Icon {
-        return delegate.getMutedDisabledIcon()
-    }
-
-    override fun canBeHitInOtherPlaces(): Boolean {
-        return delegate.canBeHitInOtherPlaces()
-    }
-
-    override fun getShortText(breakpoint: XLineBreakpoint<JavaFieldBreakpointProperties>?): String? {
-        return delegate.getShortText(breakpoint)
-    }
-
-    override fun createProperties(): JavaFieldBreakpointProperties? {
-        return delegate.createProperties()
-    }
-
-    override fun createCustomPropertiesPanel(): XBreakpointCustomPropertiesPanel<XLineBreakpoint<JavaFieldBreakpointProperties>>? {
-        return delegate.createCustomPropertiesPanel()
-    }
-
-    override fun getDisplayText(breakpoint: XLineBreakpoint<JavaFieldBreakpointProperties>?): String? {
-        return delegate.getDisplayText(breakpoint)
-    }
-
-    override fun getEditorsProvider(): XDebuggerEditorsProvider? {
-        return delegate.getEditorsProvider()
-    }
-
-    override fun createCustomRightPropertiesPanel(project: Project): XBreakpointCustomPropertiesPanel<XLineBreakpoint<JavaFieldBreakpointProperties>>? {
-        return delegate.createCustomRightPropertiesPanel(project)
-    }
-
-    override fun isSuspendThreadSupported(): Boolean {
-        return delegate.isSuspendThreadSupported()
-    }
-}
-
-class KotlinFieldBreakpoint(project: Project, breakpoint: XBreakpoint<JavaFieldBreakpointProperties>): FieldBreakpoint(project, breakpoint) {
-    override fun isValid(): Boolean {
-        if (!BreakpointWithHighlighter.isPositionValid(getXBreakpoint().getSourcePosition())) return false
-
-        return runReadAction {
-            val field = getField()
-            field != null && field.isValid()
+    override fun getDisplayText(breakpoint: XLineBreakpoint<KotlinPropertyBreakpointProperties>): String? {
+        val kotlinBreakpoint = BreakpointManager.getJavaBreakpoint(breakpoint) as? BreakpointWithHighlighter
+        if (kotlinBreakpoint != null) {
+            return kotlinBreakpoint.getDescription();
+        }
+        else {
+            return super<XLineBreakpointType>.getDisplayText(breakpoint);
         }
     }
 
-    public fun getField(): JetCallableDeclaration? {
-        val sourcePosition = getSourcePosition()
-        return getProperty(sourcePosition)
+    override fun getEditorsProvider() = null
+
+    override fun createCustomRightPropertiesPanel(project: Project): XBreakpointCustomPropertiesPanel<XLineBreakpoint<KotlinPropertyBreakpointProperties>>? {
+        return KotlinBreakpointFiltersPanel(project)
     }
 
-    private fun getProperty(sourcePosition: SourcePosition?): JetCallableDeclaration? {
-        val property: JetProperty? = PositionUtil.getPsiElementAt(getProject(), javaClass(), sourcePosition)
-        if (property != null) {
-            return property
-        }
-        val parameter: JetParameter? = PositionUtil.getPsiElementAt(getProject(), javaClass(), sourcePosition)
-        if (parameter != null) {
-            return parameter
-        }
-        return null
-    }
-
-    override fun reload(psiFile: PsiFile?) {
-        val property = getProperty(getSourcePosition())
-        if (property != null) {
-            setFieldName(property.getName())
-
-            if (property is JetProperty && property.isTopLevel()) {
-                getProperties().myClassName = PackageClassUtils.getPackageClassFqName(property.getContainingJetFile().getPackageFqName()).asString()
-            }
-            else {
-                val jetClass: JetClassOrObject? = PsiTreeUtil.getParentOfType(property, javaClass())
-                if (jetClass is JetClassOrObject) {
-                    val fqName = jetClass.getFqName()
-                    if (fqName != null) {
-                        getProperties().myClassName = fqName.asString()
-                    }
-                }
-            }
-            setInstanceFiltersEnabled(false)
-        }
-    }
-
-    fun setFieldName(fieldName: String) {
-        getProperties().myFieldName = fieldName
-    }
-
-    @TestOnly
-    fun setWatchAccess(value: Boolean) {
-        getProperties().WATCH_ACCESS = value
-    }
-
-    @TestOnly
-    fun setWatchModification(value: Boolean) {
-        getProperties().WATCH_MODIFICATION = value
-    }
+    override fun isSuspendThreadSupported() = true
 }
