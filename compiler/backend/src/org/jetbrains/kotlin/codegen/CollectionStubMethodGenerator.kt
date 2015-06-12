@@ -196,9 +196,9 @@ class CollectionStubMethodGenerator(
         child.setModality(Modality.FINAL)
         child.setVisibility(Visibilities.PUBLIC)
         val typeParameters = descriptor.getTypeConstructor().getParameters()
+        child.setTypeParameterDescriptors(typeParameters)
         val newTypeParameters = ArrayList<TypeParameterDescriptor>(typeParameters.size())
         DescriptorSubstitutor.substituteTypeParameters(typeParameters, TypeSubstitutor.EMPTY, child, newTypeParameters)
-        child.setTypeParameterDescriptors(typeParameters)
         return Pair(child, newTypeParameters)
     }
 
