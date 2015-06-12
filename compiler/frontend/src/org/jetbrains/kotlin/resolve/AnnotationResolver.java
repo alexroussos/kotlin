@@ -62,7 +62,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.jetbrains.kotlin.diagnostics.Errors.DEPRECATED_ANNOTATION_SYNTAX;
 import static org.jetbrains.kotlin.diagnostics.Errors.NOT_AN_ANNOTATION_CLASS;
 import static org.jetbrains.kotlin.resolve.BindingContext.ANNOTATION_DESCRIPTOR_TO_PSI_ELEMENT;
 import static org.jetbrains.kotlin.types.TypeUtils.NO_EXPECTED_TYPE;
@@ -133,7 +132,6 @@ public class AnnotationResolver {
         if (modifierList == null) {
             return Annotations.EMPTY;
         }
-        reportDeprecatedAnnotationSyntax(modifierList.getAnnotations(), trace);
 
         List<JetAnnotationEntry> annotationEntryElements = modifierList.getAnnotationEntries();
 
@@ -291,9 +289,6 @@ public class AnnotationResolver {
         if (descriptor != null && DescriptorUtils.isEnumClass(descriptor)) {
             trace.report(Errors.ANNOTATION_PARAMETER_MUST_BE_ENUM_CONST.on(argumentExpression));
         }
-        else if (descriptor instanceof ClassDescriptor && DescriptorUtils.isJavaLangClass((ClassDescriptor) descriptor)) {
-            trace.report(Errors.ANNOTATION_PARAMETER_MUST_BE_CLASS_LITERAL.on(argumentExpression));
-        }
         else if (descriptor instanceof ClassDescriptor && KotlinBuiltIns.isKClass((ClassDescriptor) descriptor)) {
             trace.report(Errors.ANNOTATION_PARAMETER_MUST_BE_KCLASS_LITERAL.on(argumentExpression));
         }
@@ -370,18 +365,6 @@ public class AnnotationResolver {
 
         for (JetAnnotationEntry annotationEntry : modifierList.getAnnotationEntries()) {
             trace.report(Errors.UNSUPPORTED.on(annotationEntry, "Annotations for type parameters are not supported yet"));
-        }
-    }
-
-    public static void reportDeprecatedAnnotationSyntax(@NotNull List<JetAnnotation> annotations, @NotNull BindingTrace trace) {
-        for (JetAnnotation annotation : annotations) {
-            reportDeprecatedAnnotationSyntax(annotation, trace);
-        }
-    }
-
-    public static void reportDeprecatedAnnotationSyntax(@NotNull JetAnnotation annotation, @NotNull BindingTrace trace) {
-        if (annotation.isDeprecated()) {
-            trace.report(DEPRECATED_ANNOTATION_SYNTAX.on(annotation));
         }
     }
 }

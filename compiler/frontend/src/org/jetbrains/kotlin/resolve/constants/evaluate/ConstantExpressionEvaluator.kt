@@ -39,7 +39,7 @@ import org.jetbrains.kotlin.resolve.calls.callUtil.getResolvedCall
 import org.jetbrains.kotlin.psi.psiUtil.getStrictParentOfType
 import kotlin.platform.platformStatic
 
-public class ConstantExpressionEvaluator private (val trace: BindingTrace) : JetVisitor<CompileTimeConstant<*>, JetType>() {
+public class ConstantExpressionEvaluator private constructor(val trace: BindingTrace) : JetVisitor<CompileTimeConstant<*>, JetType>() {
 
     companion object {
         platformStatic public fun evaluate(expression: JetExpression, trace: BindingTrace, expectedType: JetType? = TypeUtils.NO_EXPECTED_TYPE): CompileTimeConstant<*>? {
@@ -402,11 +402,6 @@ public class ConstantExpressionEvaluator private (val trace: BindingTrace) : Jet
             }
         }
 
-        // javaClass()
-        if (CompileTimeConstantUtils.isJavaClassMethodCall(call)) {
-            return JavaClassValue(resultingDescriptor.getReturnType()!!)
-        }
-
         return null
     }
 
@@ -638,7 +633,7 @@ private val BOOLEAN = CompileTimeType<Boolean>()
 private val STRING = CompileTimeType<String>()
 private val ANY = CompileTimeType<Any>()
 
-[suppress("UNCHECKED_CAST")]
+@suppress("UNCHECKED_CAST")
 private fun <A, B> binaryOperation(
         a: CompileTimeType<A>,
         b: CompileTimeType<B>,
@@ -647,7 +642,7 @@ private fun <A, B> binaryOperation(
         checker: Function2<BigInteger, BigInteger, BigInteger>
 ) = BinaryOperationKey(a, b, functionName) to Pair(operation, checker) as Pair<Function2<Any?, Any?, Any>, Function2<BigInteger, BigInteger, BigInteger>>
 
-[suppress("UNCHECKED_CAST")]
+@suppress("UNCHECKED_CAST")
 private fun <A> unaryOperation(
         a: CompileTimeType<A>,
         functionName: String,

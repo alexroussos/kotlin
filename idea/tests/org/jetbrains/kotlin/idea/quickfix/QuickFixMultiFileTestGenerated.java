@@ -948,21 +948,6 @@ public class QuickFixMultiFileTestGenerated extends AbstractQuickFixMultiFileTes
             JetTestUtils.assertAllTestsPresentByMetadata(this.getClass(), new File("idea/testData/quickfix/migration"), Pattern.compile("^(\\w+)\\.before\\.Main\\.kt$"), true);
         }
 
-        @TestMetadata("idea/testData/quickfix/migration/bracketsAnnotations")
-        @TestDataPath("$PROJECT_ROOT")
-        @RunWith(JUnit3RunnerWithInners.class)
-        public static class BracketsAnnotations extends AbstractQuickFixMultiFileTest {
-            public void testAllFilesPresentInBracketsAnnotations() throws Exception {
-                JetTestUtils.assertAllTestsPresentByMetadata(this.getClass(), new File("idea/testData/quickfix/migration/bracketsAnnotations"), Pattern.compile("^(\\w+)\\.before\\.Main\\.kt$"), true);
-            }
-
-            @TestMetadata("manyFilesMuitliple.before.Main.kt")
-            public void testManyFilesMuitliple() throws Exception {
-                String fileName = JetTestUtils.navigationMetadata("idea/testData/quickfix/migration/bracketsAnnotations/manyFilesMuitliple.before.Main.kt");
-                doTestWithExtraFile(fileName);
-            }
-        }
-
         @TestMetadata("idea/testData/quickfix/migration/javaAnnotationPositionedArguments")
         @TestDataPath("$PROJECT_ROOT")
         @RunWith(JUnit3RunnerWithInners.class)
@@ -1067,84 +1052,6 @@ public class QuickFixMultiFileTestGenerated extends AbstractQuickFixMultiFileTes
             @TestMetadata("manyFilesMuitliple.before.Main.kt")
             public void testManyFilesMuitliple() throws Exception {
                 String fileName = JetTestUtils.navigationMetadata("idea/testData/quickfix/migration/removeNameFromFunctionExpression/manyFilesMuitliple.before.Main.kt");
-                doTestWithExtraFile(fileName);
-            }
-        }
-
-        @TestMetadata("idea/testData/quickfix/migration/replaceJavaClassAsAnnotationParameter")
-        @TestDataPath("$PROJECT_ROOT")
-        @RunWith(JUnit3RunnerWithInners.class)
-        public static class ReplaceJavaClassAsAnnotationParameter extends AbstractQuickFixMultiFileTest {
-            public void testAllFilesPresentInReplaceJavaClassAsAnnotationParameter() throws Exception {
-                JetTestUtils.assertAllTestsPresentByMetadata(this.getClass(), new File("idea/testData/quickfix/migration/replaceJavaClassAsAnnotationParameter"), Pattern.compile("^(\\w+)\\.before\\.Main\\.kt$"), true);
-            }
-
-            @TestMetadata("manyFilesMultiple.before.Main.kt")
-            public void testManyFilesMultiple() throws Exception {
-                String fileName = JetTestUtils.navigationMetadata("idea/testData/quickfix/migration/replaceJavaClassAsAnnotationParameter/manyFilesMultiple.before.Main.kt");
-                doTestWithExtraFile(fileName);
-            }
-        }
-
-        @TestMetadata("idea/testData/quickfix/migration/replaceJavaClassWithKClassForJavaAnnotation")
-        @TestDataPath("$PROJECT_ROOT")
-        @RunWith(JUnit3RunnerWithInners.class)
-        public static class ReplaceJavaClassWithKClassForJavaAnnotation extends AbstractQuickFixMultiFileTest {
-            public void testAllFilesPresentInReplaceJavaClassWithKClassForJavaAnnotation() throws Exception {
-                JetTestUtils.assertAllTestsPresentByMetadata(this.getClass(), new File("idea/testData/quickfix/migration/replaceJavaClassWithKClassForJavaAnnotation"), Pattern.compile("^(\\w+)\\.before\\.Main\\.kt$"), true);
-            }
-
-            @TestMetadata("arrayWithExplicitTypeArgumentMultiple.before.Main.kt")
-            public void testArrayWithExplicitTypeArgumentMultiple() throws Exception {
-                String fileName = JetTestUtils.navigationMetadata("idea/testData/quickfix/migration/replaceJavaClassWithKClassForJavaAnnotation/arrayWithExplicitTypeArgumentMultiple.before.Main.kt");
-                doTestWithExtraFile(fileName);
-            }
-
-            @TestMetadata("basicMultiple.before.Main.kt")
-            public void testBasicMultiple() throws Exception {
-                String fileName = JetTestUtils.navigationMetadata("idea/testData/quickfix/migration/replaceJavaClassWithKClassForJavaAnnotation/basicMultiple.before.Main.kt");
-                doTestWithExtraFile(fileName);
-            }
-
-            @TestMetadata("genericArgumentMultiple.before.Main.kt")
-            public void testGenericArgumentMultiple() throws Exception {
-                String fileName = JetTestUtils.navigationMetadata("idea/testData/quickfix/migration/replaceJavaClassWithKClassForJavaAnnotation/genericArgumentMultiple.before.Main.kt");
-                doTestWithExtraFile(fileName);
-            }
-
-            @TestMetadata("implicitParameterMultiple.before.Main.kt")
-            public void testImplicitParameterMultiple() throws Exception {
-                String fileName = JetTestUtils.navigationMetadata("idea/testData/quickfix/migration/replaceJavaClassWithKClassForJavaAnnotation/implicitParameterMultiple.before.Main.kt");
-                doTestWithExtraFile(fileName);
-            }
-
-            @TestMetadata("manyFilesMultiple.before.Main.kt")
-            public void testManyFilesMultiple() throws Exception {
-                String fileName = JetTestUtils.navigationMetadata("idea/testData/quickfix/migration/replaceJavaClassWithKClassForJavaAnnotation/manyFilesMultiple.before.Main.kt");
-                doTestWithExtraFile(fileName);
-            }
-
-            @TestMetadata("nonConstMultiple.before.Main.kt")
-            public void testNonConstMultiple() throws Exception {
-                String fileName = JetTestUtils.navigationMetadata("idea/testData/quickfix/migration/replaceJavaClassWithKClassForJavaAnnotation/nonConstMultiple.before.Main.kt");
-                doTestWithExtraFile(fileName);
-            }
-
-            @TestMetadata("severalArgsMultiple.before.Main.kt")
-            public void testSeveralArgsMultiple() throws Exception {
-                String fileName = JetTestUtils.navigationMetadata("idea/testData/quickfix/migration/replaceJavaClassWithKClassForJavaAnnotation/severalArgsMultiple.before.Main.kt");
-                doTestWithExtraFile(fileName);
-            }
-
-            @TestMetadata("unresolvedMultiple.before.Main.kt")
-            public void testUnresolvedMultiple() throws Exception {
-                String fileName = JetTestUtils.navigationMetadata("idea/testData/quickfix/migration/replaceJavaClassWithKClassForJavaAnnotation/unresolvedMultiple.before.Main.kt");
-                doTestWithExtraFile(fileName);
-            }
-
-            @TestMetadata("valueAsVarargMultiple.before.Main.kt")
-            public void testValueAsVarargMultiple() throws Exception {
-                String fileName = JetTestUtils.navigationMetadata("idea/testData/quickfix/migration/replaceJavaClassWithKClassForJavaAnnotation/valueAsVarargMultiple.before.Main.kt");
                 doTestWithExtraFile(fileName);
             }
         }

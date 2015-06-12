@@ -128,10 +128,8 @@ public interface Errors {
     DiagnosticFactory0<JetModifierListOwner> ILLEGAL_ANNOTATION_KEYWORD = DiagnosticFactory0
             .create(ERROR, modifierSetPosition(JetTokens.ANNOTATION_KEYWORD));
     DiagnosticFactory0<JetExpression> ANNOTATION_PARAMETER_MUST_BE_CONST = DiagnosticFactory0.create(ERROR);
-    DiagnosticFactory0<JetExpression> ANNOTATION_PARAMETER_MUST_BE_CLASS_LITERAL = DiagnosticFactory0.create(ERROR);
     DiagnosticFactory0<JetExpression> ANNOTATION_PARAMETER_MUST_BE_KCLASS_LITERAL = DiagnosticFactory0.create(ERROR);
     DiagnosticFactory0<JetExpression> ANNOTATION_PARAMETER_MUST_BE_ENUM_CONST = DiagnosticFactory0.create(ERROR);
-    DiagnosticFactory0<JetAnnotation> DEPRECATED_ANNOTATION_SYNTAX = DiagnosticFactory0.create(WARNING);
     DiagnosticFactory0<JetExpression> ANNOTATION_PARAMETER_DEFAULT_VALUE_MUST_BE_CONSTANT = DiagnosticFactory0.create(ERROR);
 
     // Classes and traits
@@ -160,7 +158,7 @@ public interface Errors {
     DiagnosticFactory0<JetNullableType> NULLABLE_SUPERTYPE = DiagnosticFactory0.create(ERROR, NULLABLE_TYPE);
     DiagnosticFactory0<JetTypeReference> DYNAMIC_SUPERTYPE = DiagnosticFactory0.create(ERROR);
 
-    DiagnosticFactory0<JetElement> MISSING_CONSTRUCTOR_KEYWORD = DiagnosticFactory0.create(WARNING);
+    DiagnosticFactory0<JetElement> MISSING_CONSTRUCTOR_KEYWORD = DiagnosticFactory0.create(ERROR);
 
     // Secondary constructors
 

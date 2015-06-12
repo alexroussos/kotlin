@@ -447,13 +447,13 @@ public class JetParsing extends AbstractJetParsing {
 
             if (at(AT)) {
                 if (!tryParseModifier(tokenConsumer)) {
-                    parseAnnotation(annotationParsingMode);
+                    parseAnnotationOrList(annotationParsingMode);
                 }
             }
             else if (tryParseModifier(tokenConsumer)) {
                 // modifier advanced
             }
-            else if (at(LBRACKET) || (annotationParsingMode.allowShortAnnotations && at(IDENTIFIER))) {
+            else if (annotationParsingMode.allowShortAnnotations && at(IDENTIFIER)) {
                 parseAnnotation(annotationParsingMode);
             }
             else {
@@ -513,13 +513,13 @@ public class JetParsing extends AbstractJetParsing {
 
     /*
      * annotations
-     *   : annotation*
+     *   : (annotation | annotationList)*
      *   ;
      */
     boolean parseAnnotations(AnnotationParsingMode mode) {
-        if (!parseAnnotation(mode)) return false;
+        if (!parseAnnotationOrList(mode)) return false;
 
-        while (parseAnnotation(mode)) {
+        while (parseAnnotationOrList(mode)) {
             // do nothing
         }
 
@@ -528,17 +528,20 @@ public class JetParsing extends AbstractJetParsing {
 
     /*
      * annotation
-     *   : "[" ("file" ":")? annotationEntry+ "]"
-     *   : annotationEntry
-     *   : "@" annotationEntry
+     *   : annotationPrefix? unescapedAnnotation
+     *   ;
+     *
+     * annotationList
+     *   : annotationPrefix "[" unescapedAnnotation+ "]"
+     *   ;
+     *
+     *  annotationPrefix:
+     *   : ("@" (":" "file")?)
      *   ;
      */
-    private boolean parseAnnotation(AnnotationParsingMode mode) {
-        if (at(LBRACKET)) {
-            return parseAnnotationList(mode, false);
-        }
-        else if (mode.allowShortAnnotations && at(IDENTIFIER)) {
-            return parseAnnotationEntry(mode);
+    private boolean parseAnnotationOrList(AnnotationParsingMode mode) {
+        if (mode.allowShortAnnotations && at(IDENTIFIER)) {
+            return parseAnnotation(mode);
         }
         else if (at(AT)) {
             IElementType nextRawToken = myBuilder.rawLookup(1);
@@ -556,10 +559,10 @@ public class JetParsing extends AbstractJetParsing {
             }
 
             if (tokenToMatch == IDENTIFIER) {
-                return parseAnnotationEntry(mode);
+                return parseAnnotation(mode);
             }
             else if (tokenToMatch == LBRACKET) {
-                return parseAnnotationList(mode, true);
+                return parseAnnotationList(mode);
             }
             else {
                 if (isTargetedAnnotation) {
@@ -580,14 +583,13 @@ public class JetParsing extends AbstractJetParsing {
         return false;
     }
 
-    private boolean parseAnnotationList(AnnotationParsingMode mode, boolean expectAtSymbol) {
-        assert !expectAtSymbol || _at(AT);
-        assert expectAtSymbol || _at(LBRACKET);
+    private boolean parseAnnotationList(AnnotationParsingMode mode) {
+        assert _at(AT);
         PsiBuilder.Marker annotation = mark();
 
         myBuilder.disableNewlines();
 
-        advance(); // AT or LBRACKET
+        advance(); // AT
 
         if (!parseAnnotationTargetIfNeeded(mode)) {
             annotation.rollbackTo();
@@ -595,10 +597,8 @@ public class JetParsing extends AbstractJetParsing {
             return false;
         }
 
-        if (expectAtSymbol) {
-            assert _at(LBRACKET);
-            advance(); // LBRACKET
-        }
+        assert _at(LBRACKET);
+        advance(); // LBRACKET
 
         if (!at(IDENTIFIER) && !at(AT)) {
             error("Expecting a list of annotations");
@@ -610,7 +610,7 @@ public class JetParsing extends AbstractJetParsing {
                     continue;
                 }
 
-                parseAnnotationEntry(ALLOW_UNESCAPED_REGULAR_ANNOTATIONS);
+                parseAnnotation(ALLOW_UNESCAPED_REGULAR_ANNOTATIONS);
                 while (at(COMMA)) {
                     errorAndAdvance("No commas needed to separate annotations");
                 }
@@ -656,11 +656,15 @@ public class JetParsing extends AbstractJetParsing {
     }
 
     /*
-     * annotationEntry
+     * annotation
+     *   : annotationPrefix? unescapedAnnotation
+     *   ;
+     *
+     * unescapedAnnotation
      *   : SimpleName{"."} typeArguments? valueArguments?
      *   ;
      */
-    private boolean parseAnnotationEntry(AnnotationParsingMode mode) {
+    private boolean parseAnnotation(AnnotationParsingMode mode) {
         assert _at(IDENTIFIER) ||
                (_at(AT) && !WHITE_SPACE_OR_COMMENT_BIT_SET.contains(myBuilder.rawLookup(1)));
 
@@ -1389,7 +1393,7 @@ public class JetParsing extends AbstractJetParsing {
 
         if (!at(LPAR)) {
             // Account for Jet-114 (val a : int get {...})
-            TokenSet ACCESSOR_FIRST_OR_PROPERTY_END = TokenSet.orSet(MODIFIER_KEYWORDS, TokenSet.create(LBRACKET, GET_KEYWORD, SET_KEYWORD, EOL_OR_SEMICOLON, RBRACE));
+            TokenSet ACCESSOR_FIRST_OR_PROPERTY_END = TokenSet.orSet(MODIFIER_KEYWORDS, TokenSet.create(AT, GET_KEYWORD, SET_KEYWORD, EOL_OR_SEMICOLON, RBRACE));
             if (!atSet(ACCESSOR_FIRST_OR_PROPERTY_END)) {
                 errorUntil("Accessor body expected", TokenSet.orSet(ACCESSOR_FIRST_OR_PROPERTY_END, TokenSet.create(LBRACE, LPAR, EQ)));
             }

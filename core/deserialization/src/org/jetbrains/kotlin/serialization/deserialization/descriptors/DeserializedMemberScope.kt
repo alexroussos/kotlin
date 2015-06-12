@@ -28,7 +28,7 @@ import org.jetbrains.kotlin.serialization.ProtoBuf.Callable.CallableKind
 import org.jetbrains.kotlin.serialization.deserialization.DeserializationContext
 import java.util.*
 
-public abstract class DeserializedMemberScope protected(
+public abstract class DeserializedMemberScope protected constructor(
         protected val c: DeserializationContext,
         membersList: Collection<ProtoBuf.Callable>
 ) : JetScope {
@@ -75,7 +75,7 @@ public abstract class DeserializedMemberScope protected(
         val memberProtos = membersProtos()[ProtoKey(name, kind, isExtension = false)].orEmpty() +
                            membersProtos()[ProtoKey(name, kind, isExtension = true)].orEmpty()
 
-        [suppress("UNCHECKED_CAST")]
+        @suppress("UNCHECKED_CAST")
         return memberProtos.mapTo(LinkedHashSet<D>()) { memberProto ->
             c.memberDeserializer.loadCallable(memberProto) as D
         }

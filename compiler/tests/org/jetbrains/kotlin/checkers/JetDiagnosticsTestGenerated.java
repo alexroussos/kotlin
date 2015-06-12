@@ -711,12 +711,6 @@ public class JetDiagnosticsTestGenerated extends AbstractJetDiagnosticsTest {
                 doTest(fileName);
             }
 
-            @TestMetadata("bracketsDeprecation.kt")
-            public void testBracketsDeprecation() throws Exception {
-                String fileName = JetTestUtils.navigationMetadata("compiler/testData/diagnostics/tests/annotations/bracketsDeprecation.kt");
-                doTest(fileName);
-            }
-
             @TestMetadata("ConstructorCall.kt")
             public void testConstructorCall() throws Exception {
                 String fileName = JetTestUtils.navigationMetadata("compiler/testData/diagnostics/tests/annotations/ConstructorCall.kt");
@@ -750,12 +744,6 @@ public class JetDiagnosticsTestGenerated extends AbstractJetDiagnosticsTest {
             @TestMetadata("Deprecated.kt")
             public void testDeprecated() throws Exception {
                 String fileName = JetTestUtils.navigationMetadata("compiler/testData/diagnostics/tests/annotations/Deprecated.kt");
-                doTest(fileName);
-            }
-
-            @TestMetadata("deprecatedJavaLangClass.kt")
-            public void testDeprecatedJavaLangClass() throws Exception {
-                String fileName = JetTestUtils.navigationMetadata("compiler/testData/diagnostics/tests/annotations/deprecatedJavaLangClass.kt");
                 doTest(fileName);
             }
 

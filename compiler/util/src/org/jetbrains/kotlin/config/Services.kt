@@ -18,13 +18,13 @@ package org.jetbrains.kotlin.config
 
 import java.util.HashMap
 
-public class Services private(private val map: Map<Class<*>, Any>) {
+public class Services private constructor(private val map: Map<Class<*>, Any>) {
     companion object {
         public val EMPTY: Services = Builder().build()
     }
 
     public fun <T> get(interfaceClass: Class<T>): T {
-        [suppress("UNCHECKED_CAST")]
+        @suppress("UNCHECKED_CAST")
         return map.get(interfaceClass) as T
     }
 

@@ -1,24 +1,25 @@
-[file: ANNOTATION]
+@file:ANNOTATION
 
 package test
 
 import test.MyEnum.*
+import kotlin.reflect.KClass
 
-ANNOTATION class MyClass [ANNOTATION]([ANNOTATION] param: Int, [ANNOTATION] val consProp: Int) {
+ANNOTATION class MyClass @ANNOTATION constructor(@ANNOTATION param: Int, @ANNOTATION val consProp: Int) {
     ANNOTATION companion object {
     }
 
     ANNOTATION var prop: Int = 1
-        [ANNOTATION] get
-        [ANNOTATION] set([ANNOTATION] param) = $prop = param
-    ANNOTATION fun foo([ANNOTATION] param: Int) {
-        [ANNOTATION] class LocalClass { }
+        @ANNOTATION get
+        @ANNOTATION set(@ANNOTATION param) = $prop = param
+    ANNOTATION fun foo(@ANNOTATION param: Int) {
+        @ANNOTATION class LocalClass { }
 
-        [ANNOTATION] object LocalObject { }
+        @ANNOTATION object LocalObject { }
 
-        [ANNOTATION] fun localFun() {}
+        @ANNOTATION fun localFun() {}
 
-        [ANNOTATION] var localVar: Int = 1
+        @ANNOTATION var localVar: Int = 1
     }
 
     ANNOTATION class InnerClass {
@@ -30,13 +31,13 @@ ANNOTATION object MyObject {
 }
 
 ANNOTATION var topProp: Int = 1
-    [ANNOTATION] get
-    [ANNOTATION] set([ANNOTATION] param) = $topProp = param
+    @ANNOTATION get
+    @ANNOTATION set(@ANNOTATION param) = $topProp = param
 
-ANNOTATION fun topFoo([ANNOTATION] param: Int) {
+ANNOTATION fun topFoo(@ANNOTATION param: Int) {
 }
 
-val funLiteral = {([ANNOTATION] a: Int) -> a }
+val funLiteral = {(@ANNOTATION a: Int) -> a }
 
 
 annotation class AnnString(a: String)
@@ -48,7 +49,7 @@ annotation class AnnStringVararg(vararg a: String)
 annotation class AnnStringArray(a: Array<String>)
 annotation class AnnArrayOfEnum(a: Array<MyEnum>)
 annotation class AnnAnn(a: AnnInt)
-annotation class AnnClass(a: Class<*>)
+annotation class AnnClass(a: KClass<*>)
 
 enum class MyEnum {
   A
