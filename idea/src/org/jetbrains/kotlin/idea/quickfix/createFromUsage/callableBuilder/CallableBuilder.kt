@@ -357,7 +357,7 @@ class CallableBuilder(val config: CallableBuilderConfiguration) {
             return ChainedScope(
                     receiverClassDescriptor,
                     "Classifier resolution scope: ${receiverClassDescriptor.getName()}",
-                    typeParamScope,
+                    typeParamScope.takeSnapshot(),
                     memberScope
             )
         }

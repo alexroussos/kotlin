@@ -145,7 +145,7 @@ private fun getClassInnerScope(outerScope: JetScope, descriptor: ClassDescriptor
     }
     headerScope.changeLockLevel(WritableScope.LockLevel.READING)
 
-    val classScope = ChainedScope(descriptor, "Class ${descriptor.getName()} scope", descriptor.getDefaultType().getMemberScope(), headerScope)
+    val classScope = ChainedScope(descriptor, "Class ${descriptor.getName()} scope", descriptor.getDefaultType().getMemberScope(), headerScope.takeSnapshot())
     return classScope
 }
 

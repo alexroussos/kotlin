@@ -249,7 +249,7 @@ public class LazyClassDescriptor extends ClassDescriptorBase implements ClassDes
         }
         scope.changeLockLevel(WritableScope.LockLevel.READING);
 
-        return new ChainedScope(this, "ScopeForClassHeaderResolution: " + getName(), scope, getOuterScope());
+        return new ChainedScope(this, "ScopeForClassHeaderResolution: " + getName(), scope.takeSnapshot(), getOuterScope());
     }
 
     @NotNull

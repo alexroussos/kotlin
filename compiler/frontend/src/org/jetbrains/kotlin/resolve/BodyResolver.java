@@ -530,7 +530,7 @@ public class BodyResolver {
             parameterScope.addVariableDescriptor(valueParameterDescriptor);
         }
         parameterScope.changeLockLevel(WritableScope.LockLevel.READING);
-        return parameterScope;
+        return parameterScope.takeSnapshot();
     }
 
     private void resolveProperty(

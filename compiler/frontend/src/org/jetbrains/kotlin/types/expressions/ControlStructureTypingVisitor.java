@@ -319,7 +319,7 @@ public class ControlStructureTypingVisitor extends ExpressionTypingVisitor {
         }
         else if (body != null) {
             WritableScope writableScope = newWritableScopeImpl(context, "do..while body scope");
-            conditionScope = writableScope;
+            conditionScope = writableScope.takeSnapshot();
             List<JetExpression> block;
             if (body instanceof JetBlockExpression) {
                 block = ((JetBlockExpression)body).getStatements();
@@ -399,7 +399,7 @@ public class ControlStructureTypingVisitor extends ExpressionTypingVisitor {
             if (multiParameter != null && loopRange != null) {
                 JetType elementType = expectedParameterType == null ? ErrorUtils.createErrorType("Loop range has no type") : expectedParameterType;
                 TransientReceiver iteratorNextAsReceiver = new TransientReceiver(elementType);
-                components.annotationResolver.resolveAnnotationsWithArguments(loopScope, multiParameter.getModifierList(), context.trace);
+                components.annotationResolver.resolveAnnotationsWithArguments(loopScope.takeSnapshot(), multiParameter.getModifierList(), context.trace);
                 components.multiDeclarationResolver.defineLocalVariablesFromMultiDeclaration(
                         loopScope, multiParameter, iteratorNextAsReceiver, loopRange, context
                 );
@@ -478,7 +478,7 @@ public class ControlStructureTypingVisitor extends ExpressionTypingVisitor {
                 if (catchBody != null) {
                     WritableScope catchScope = newWritableScopeImpl(context, "Catch scope");
                     catchScope.addVariableDescriptor(variableDescriptor);
-                    JetType type = facade.getTypeInfo(catchBody, context.replaceScope(catchScope)).getType();
+                    JetType type = facade.getTypeInfo(catchBody, context.replaceScope(catchScope.takeSnapshot())).getType();
                     if (type != null) {
                         types.add(type);
                     }

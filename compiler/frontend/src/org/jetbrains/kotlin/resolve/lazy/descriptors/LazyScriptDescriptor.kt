@@ -91,7 +91,7 @@ public class LazyScriptDescriptor(
                 this,
                 "Scope for body resolution for " + this,
                 resolveSession.getScopeProvider().getFileScope(jetScript.getContainingJetFile()),
-                parametersScope
+                parametersScope.takeSnapshot()
         )
     }
 

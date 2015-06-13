@@ -740,8 +740,8 @@ public class DescriptorResolver {
                 typeParameterDescriptors = resolveTypeParametersForCallableDescriptor(propertyDescriptor, writableScope, typeParameters,
                                                                                       trace);
                 writableScope.changeLockLevel(WritableScope.LockLevel.READING);
-                resolveGenericBounds(property, propertyDescriptor, writableScope, typeParameterDescriptors, trace);
-                scopeWithTypeParameters = writableScope;
+                scopeWithTypeParameters = writableScope.takeSnapshot();
+                resolveGenericBounds(property, propertyDescriptor, scopeWithTypeParameters, typeParameterDescriptors, trace);
             }
 
             JetTypeReference receiverTypeRef = property.getReceiverTypeReference();

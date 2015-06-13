@@ -134,15 +134,17 @@ class FunctionDescriptorResolver(
             trace: BindingTrace,
             expectedFunctionType: JetType
     ) {
-        val innerScope = WritableScopeImpl(scope,
+        val innerScopeWritable: WritableScope = WritableScopeImpl(scope,
                                            functionDescriptor,
                                            TraceBasedRedeclarationHandler(trace),
                                            "Function descriptor header scope",
                                            labeledDeclaration = functionDescriptor)
 
         val typeParameterDescriptors = descriptorResolver.
-                resolveTypeParametersForCallableDescriptor(functionDescriptor, innerScope, function.getTypeParameters(), trace)
-        innerScope.changeLockLevel(WritableScope.LockLevel.BOTH)
+                resolveTypeParametersForCallableDescriptor(functionDescriptor, innerScopeWritable, function.getTypeParameters(), trace)
+        innerScopeWritable.changeLockLevel(WritableScope.LockLevel.BOTH)
+
+        val innerScope = innerScopeWritable.takeSnapshot()
         descriptorResolver.resolveGenericBounds(function, functionDescriptor, innerScope, typeParameterDescriptors, trace)
 
         val receiverTypeRef = function.getReceiverTypeReference()
@@ -153,9 +155,9 @@ class FunctionDescriptorResolver(
                     expectedFunctionType.getReceiverType()
 
 
-        val valueParameterDescriptors = createValueParameterDescriptors(function, functionDescriptor, innerScope, trace, expectedFunctionType)
+        val valueParameterDescriptors = createValueParameterDescriptors(function, functionDescriptor, innerScopeWritable, trace, expectedFunctionType)
 
-        innerScope.changeLockLevel(WritableScope.LockLevel.READING)
+        innerScopeWritable.changeLockLevel(WritableScope.LockLevel.READING)
 
         val returnType = function.getTypeReference()?.let { typeResolver.resolveType(innerScope, it, trace, true) }
 
@@ -179,7 +181,7 @@ class FunctionDescriptorResolver(
     private fun createValueParameterDescriptors(
             function: JetFunction,
             functionDescriptor: SimpleFunctionDescriptorImpl,
-            innerScope: WritableScopeImpl,
+            innerScope: WritableScope,
             trace: BindingTrace,
             expectedFunctionType: JetType
     ): List<ValueParameterDescriptor> {
@@ -306,7 +308,7 @@ class FunctionDescriptorResolver(
 
             val type: JetType
             if (typeReference != null) {
-                type = typeResolver.resolveType(parameterScope, typeReference, trace, true)
+                type = typeResolver.resolveType(parameterScope.takeSnapshot(), typeReference, trace, true)
                 if (expectedType != null) {
                     if (!JetTypeChecker.DEFAULT.isSubtypeOf(expectedType, type)) {
                         trace.report(EXPECTED_PARAMETER_TYPE_MISMATCH.on(valueParameter, expectedType))
@@ -346,7 +348,7 @@ class FunctionDescriptorResolver(
                 checkConstructorParameterHasNoModifier(trace, valueParameter)
             }
 
-            val valueParameterDescriptor = descriptorResolver.resolveValueParameterDescriptor(parameterScope, functionDescriptor,
+            val valueParameterDescriptor = descriptorResolver.resolveValueParameterDescriptor(parameterScope.takeSnapshot(), functionDescriptor,
                                                                                               valueParameter, i, type, trace)
             parameterScope.addVariableDescriptor(valueParameterDescriptor)
             result.add(valueParameterDescriptor)

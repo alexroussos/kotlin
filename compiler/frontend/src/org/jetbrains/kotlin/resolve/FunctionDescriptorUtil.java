@@ -89,7 +89,7 @@ public class FunctionDescriptorUtil {
             parameterScope.addVariableDescriptor(valueParameterDescriptor);
         }
         parameterScope.changeLockLevel(WritableScope.LockLevel.READING);
-        return parameterScope;
+        return parameterScope.takeSnapshot();
     }
 
     public static void initializeFromFunctionType(

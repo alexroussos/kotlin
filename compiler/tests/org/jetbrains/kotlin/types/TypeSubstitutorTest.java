@@ -86,7 +86,7 @@ public class TypeSubstitutorTest extends KotlinTestWithEnvironment {
         JetScope topLevelDeclarations = module.getPackage(FqName.ROOT).getMemberScope();
         ClassifierDescriptor contextClass = topLevelDeclarations.getClassifier(Name.identifier("___Context"));
         assert contextClass instanceof ClassDescriptor;
-        WritableScopeImpl typeParameters = new WritableScopeImpl(JetScope.Empty.INSTANCE$, module, RedeclarationHandler.THROW_EXCEPTION,
+        WritableScope typeParameters = new WritableScopeImpl(JetScope.Empty.INSTANCE$, module, RedeclarationHandler.THROW_EXCEPTION,
                                       "Type parameter scope");
         for (TypeParameterDescriptor parameterDescriptor : contextClass.getTypeConstructor().getParameters()) {
             typeParameters.addClassifierDescriptor(parameterDescriptor);
@@ -95,7 +95,7 @@ public class TypeSubstitutorTest extends KotlinTestWithEnvironment {
         return new ChainedScope(module,
                                 "TypeSubstitutorTest::getContextScope()",
                                 topLevelDeclarations,
-                                typeParameters,
+                                typeParameters.takeSnapshot(),
                                 contextClass.getDefaultType().getMemberScope(),
                                 KotlinBuiltIns.getInstance().getBuiltInsPackageScope());
     }

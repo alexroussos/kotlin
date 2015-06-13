@@ -89,12 +89,12 @@ public class JetDefaultModalityModifiersTest extends JetLiteFixture {
             assert aClass instanceof JetClass;
             AnalysisResult bindingContext = JvmResolveUtil.analyzeOneFileWithJavaIntegrationAndCheckForErrors(file);
             DeclarationDescriptor classDescriptor = bindingContext.getBindingContext().get(BindingContext.DECLARATION_TO_DESCRIPTOR, aClass);
-            WritableScopeImpl scope = new WritableScopeImpl(
+            WritableScope scope = new WritableScopeImpl(
                     libraryScope, root, RedeclarationHandler.DO_NOTHING, "JetDefaultModalityModifiersTest");
             assert classDescriptor instanceof ClassifierDescriptor;
             scope.addClassifierDescriptor((ClassifierDescriptor) classDescriptor);
             scope.changeLockLevel(WritableScope.LockLevel.READING);
-            return scope;
+            return scope.takeSnapshot();
         }
 
         private ClassDescriptorWithResolutionScopes createClassDescriptor(ClassKind kind, JetClass aClass) {

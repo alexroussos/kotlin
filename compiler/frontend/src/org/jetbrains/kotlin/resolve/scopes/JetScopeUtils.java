@@ -66,7 +66,7 @@ public final class JetScopeUtils {
                                                             new TraceBasedRedeclarationHandler(trace), "Accessor Scope");
         accessorScope.changeLockLevel(WritableScope.LockLevel.READING);
 
-        return accessorScope;
+        return accessorScope.takeSnapshot();
     }
 
     public static JetScope getPropertyDeclarationInnerScope(
@@ -133,7 +133,7 @@ public final class JetScopeUtils {
             result.addClassifierDescriptor(typeParameterDescriptor);
         }
         result.changeLockLevel(WritableScope.LockLevel.READING);
-        return result;
+        return result.takeSnapshot();
     }
 
     @TestOnly

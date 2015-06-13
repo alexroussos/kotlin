@@ -72,9 +72,9 @@ public class MultiDeclarationResolver(
             if (componentType == null) {
                 componentType = ErrorUtils.createErrorType("$componentName() return type")
             }
-            val variableDescriptor = descriptorResolver.resolveLocalVariableDescriptorWithType(writableScope, entry, componentType, context.trace)
+            val variableDescriptor = descriptorResolver.resolveLocalVariableDescriptorWithType(writableScope.takeSnapshot(), entry, componentType, context.trace)
 
-            val olderVariable = writableScope.getLocalVariable(variableDescriptor.getName())
+            val olderVariable = writableScope.takeSnapshot().getLocalVariable(variableDescriptor.getName())
             ExpressionTypingUtils.checkVariableShadowing(context, variableDescriptor, olderVariable)
 
             writableScope.addVariableDescriptor(variableDescriptor)

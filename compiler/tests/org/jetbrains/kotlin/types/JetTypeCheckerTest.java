@@ -605,11 +605,10 @@ public class JetTypeCheckerTest extends JetLiteFixture {
 
     @SuppressWarnings("ConstantConditions")
     private JetScope addImports(JetScope scope) {
-        WritableScopeImpl writableScope = new WritableScopeImpl(
+        WritableScope writableScope = new WritableScopeImpl(
                 scope, scope.getContainingDeclaration(), RedeclarationHandler.DO_NOTHING, "JetTypeCheckerTest.addImports"
         );
         List<JetScope> scopeChain = new ArrayList<JetScope>();
-        scopeChain.add(writableScope);
 
         ModuleDescriptor module = LazyResolveTestUtil.resolveProject(getProject());
         for (ImportPath defaultImport : module.getDefaultImports()) {
@@ -625,6 +624,7 @@ public class JetTypeCheckerTest extends JetLiteFixture {
         }
         scopeChain.add(module.getPackage(FqName.ROOT).getMemberScope());
         writableScope.changeLockLevel(WritableScope.LockLevel.BOTH);
+        scopeChain.add(0, writableScope.takeSnapshot());
         return new ChainedScope(scope.getContainingDeclaration(), "JetTypeCheckerTest.addImports scope with imports", scopeChain.toArray(new JetScope[scopeChain.size()]));
     }
 

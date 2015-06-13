@@ -201,7 +201,7 @@ public class TypeUnifierTest extends JetLiteFixture {
     }
 
     private TypeProjection makeTypeProjection(JetScope scope, String typeStr) {
-        WritableScopeImpl withX =
+        WritableScope withX =
                 new WritableScopeImpl(scope, scope.getContainingDeclaration(), RedeclarationHandler.DO_NOTHING, "With X");
         withX.addClassifierDescriptor(x);
         withX.addClassifierDescriptor(y);
@@ -211,7 +211,7 @@ public class TypeUnifierTest extends JetLiteFixture {
 
         JetTypeReference typeReference = projection.getTypeReference();
         assert typeReference != null;
-        JetType type = typeResolver.resolveType(withX, typeReference, JetTestUtils.DUMMY_TRACE, true);
+        JetType type = typeResolver.resolveType(withX.takeSnapshot(), typeReference, JetTestUtils.DUMMY_TRACE, true);
 
         return new TypeProjectionImpl(getProjectionKind(typeStr, projection), type);
     }
