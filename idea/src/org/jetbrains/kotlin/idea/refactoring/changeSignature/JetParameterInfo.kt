@@ -22,6 +22,7 @@ import com.intellij.refactoring.changeSignature.ParameterInfo
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.descriptors.impl.AnonymousFunctionDescriptor
 import org.jetbrains.kotlin.idea.caches.resolve.analyze
+import org.jetbrains.kotlin.idea.core.compareDescriptors
 import org.jetbrains.kotlin.idea.refactoring.changeSignature.usages.JetFunctionDefinitionUsage
 import org.jetbrains.kotlin.idea.references.JetReference
 import org.jetbrains.kotlin.idea.util.IdeDescriptorRenderers
@@ -53,21 +54,31 @@ public class JetParameterInfo(
         val file = defaultValueForCall?.getContainingFile() as? JetFile
         defaultValueParameterReferences =
                 if (defaultValueForCall != null && file != null && (file.isPhysical() || file.analysisContext != null)) {
+                    val project = file.getProject()
                     val map = LinkedHashMap<PsiReference, DeclarationDescriptor>()
 
                     defaultValueForCall!!.accept(
                             object : JetTreeVisitorVoid() {
                                 private fun selfParameterOrNull(parameter: DeclarationDescriptor?): ValueParameterDescriptor? {
                                     return if (parameter is ValueParameterDescriptor &&
-                                               parameter.getContainingDeclaration() == functionDescriptor) parameter else null
+                                               compareDescriptors(project, parameter.getContainingDeclaration(), functionDescriptor)) {
+                                        parameter
+                                    } else null
                                 }
 
                                 private fun selfReceiverOrNull(receiver: ThisReceiver?): DeclarationDescriptor? {
-                                    return when (receiver) {
-                                        functionDescriptor.getExtensionReceiverParameter()?.getValue(),
-                                        functionDescriptor.getDispatchReceiverParameter()?.getValue()-> receiver?.getDeclarationDescriptor()
-                                        else -> null
+                                    val receiverDescriptor = receiver?.getDeclarationDescriptor()
+                                    if (compareDescriptors(file.getProject(),
+                                                       receiverDescriptor,
+                                                       functionDescriptor.getExtensionReceiverParameter()?.getContainingDeclaration())) {
+                                        return receiverDescriptor
                                     }
+                                    if (compareDescriptors(file.getProject(),
+                                                           receiverDescriptor,
+                                                           functionDescriptor.getDispatchReceiverParameter()?.getContainingDeclaration())) {
+                                        return receiverDescriptor
+                                    }
+                                    return null
                                 }
 
                                 private fun getRelevantDescriptor(
@@ -86,11 +97,15 @@ public class JetParameterInfo(
 
                                     val resolvedCall = expression.getResolvedCall(context) ?: return null
                                     (resolvedCall.getResultingDescriptor() as? ReceiverParameterDescriptor)?.let {
-                                        return when (it) {
-                                            functionDescriptor.getDispatchReceiverParameter(),
-                                            functionDescriptor.getExtensionReceiverParameter() -> it
-                                            else -> null
-                                        }
+                                        val thisDescriptor = it.getContainingDeclaration()
+                                        return if (compareDescriptors(file.getProject(),
+                                                                      thisDescriptor,
+                                                                      functionDescriptor.getDispatchReceiverParameter()?.getContainingDeclaration()) ||
+                                            compareDescriptors(file.getProject(),
+                                                               thisDescriptor,
+                                                               functionDescriptor.getExtensionReceiverParameter()?.getContainingDeclaration())) {
+                                            it
+                                        } else null
                                     }
 
                                     selfReceiverOrNull(resolvedCall.getExtensionReceiver() as? ThisReceiver)?.let { return it }
