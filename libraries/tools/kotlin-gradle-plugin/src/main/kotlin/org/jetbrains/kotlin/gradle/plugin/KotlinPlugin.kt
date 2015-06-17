@@ -36,6 +36,7 @@ import org.gradle.api.tasks.Delete
 import groovy.lang.Closure
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.file.FileCollection
+import org.gradle.api.internal.tasks.DefaultTaskDependency
 import org.jetbrains.kotlin.gradle.tasks.KotlinTasksProvider
 import java.util.ServiceLoader
 import org.gradle.api.logging.*
@@ -624,7 +625,7 @@ private fun Project.initKapt(
     kotlinTask.storeKaptAnnotationsFile(kaptManager)
 }
 
-private fun Project.createKotlinAfterJavaTask(
+private fun createKotlinAfterJavaTask(
         javaTask: AbstractCompile,
         kotlinOutputDir: File,
         taskFactory: (suffix: String) -> AbstractCompile
@@ -633,14 +634,10 @@ private fun Project.createKotlinAfterJavaTask(
         setProperty("kotlinDestinationDir", kotlinOutputDir)
         setDestinationDir(javaTask.getDestinationDir())
         setClasspath(javaTask.getClasspath())
-        dependsOn(javaTask.getDependsOn(), javaTask)
         this
     }
 
-    val dependsOnJava = getTasks().filter { javaTask in it.getDependsOn() && it != kotlinAfterJavaTask }
-    for (task in dependsOnJava) {
-        task.dependsOn(kotlinAfterJavaTask)
-    }
+    javaTask.doLast { kotlinAfterJavaTask.execute() }
 
     return kotlinAfterJavaTask
 }
